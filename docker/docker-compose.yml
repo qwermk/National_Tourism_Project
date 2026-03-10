@@ -1,0 +1,129 @@
+# =============================================================================
+# National Tourism Project — Docker Compose (Fase 1: Local — 100% Open Source)
+# =============================================================================
+# Todos los servicios usan herramientas open-source:
+#   - MinIO:       Almacenamiento S3-compatible (AGPL v3)
+#   - Dagster OSS: Orquestación (Apache 2.0 — NO es Dagster Cloud)
+#   - Evidence:    Dashboards de visualización (MIT)
+# =============================================================================
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # MinIO — Almacenamiento S3-compatible
+  # ---------------------------------------------------------------------------
+  minio:
+    image: minio/minio:latest
+    container_name: tourism-minio
+    ports:
+      - "9000:9000"     # API S3
+      - "9001:9001"     # Console Web
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tourism-network
+
+  # ---------------------------------------------------------------------------
+  # MinIO — Inicialización de buckets
+  # ---------------------------------------------------------------------------
+  minio-init:
+    image: minio/mc:latest
+    container_name: tourism-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 minioadmin minioadmin;
+      mc mb local/bronze --ignore-existing;
+      mc mb local/silver --ignore-existing;
+      mc mb local/gold --ignore-existing;
+      mc mb local/raw --ignore-existing;
+      echo 'Buckets creados: raw, bronze, silver, gold';
+      exit 0;
+      "
+    networks:
+      - tourism-network
+
+  # ---------------------------------------------------------------------------
+  # Dagster — Webserver (UI en http://localhost:3000)
+  # ---------------------------------------------------------------------------
+  dagster-webserver:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dagster
+    container_name: tourism-dagster-webserver
+    working_dir: /opt/dagster/app
+    command: dagster-webserver -h 0.0.0.0 -p 3000
+    ports:
+      - "3000:3000"
+    environment:
+      DAGSTER_HOME: /opt/dagster/dagster_home
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      DUCKDB_DATABASE: /opt/dagster/data/tourism.duckdb
+    volumes:
+      - dagster-home:/opt/dagster/dagster_home
+      - dagster-data:/opt/dagster/data
+      - ../dagster:/opt/dagster/app
+      - ../dbt:/opt/dagster/dbt
+    depends_on:
+      minio:
+        condition: service_healthy
+    networks:
+      - tourism-network
+
+  # ---------------------------------------------------------------------------
+  # Dagster — Daemon (schedules, sensors, run queue)
+  # ---------------------------------------------------------------------------
+  dagster-daemon:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dagster
+    container_name: tourism-dagster-daemon
+    working_dir: /opt/dagster/app
+    command: dagster-daemon run
+    environment:
+      DAGSTER_HOME: /opt/dagster/dagster_home
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      DUCKDB_DATABASE: /opt/dagster/data/tourism.duckdb
+    volumes:
+      - dagster-home:/opt/dagster/dagster_home
+      - dagster-data:/opt/dagster/data
+      - ../dagster:/opt/dagster/app
+      - ../dbt:/opt/dagster/dbt
+    depends_on:
+      minio:
+        condition: service_healthy
+    networks:
+      - tourism-network
+
+# ---------------------------------------------------------------------------
+# Volúmenes persistentes
+# ---------------------------------------------------------------------------
+volumes:
+  minio-data:
+    driver: local
+  dagster-home:
+    driver: local
+  dagster-data:
+    driver: local
+
+# ---------------------------------------------------------------------------
+# Red compartida
+# ---------------------------------------------------------------------------
+networks:
+  tourism-network:
+    driver: bridge

@@ -1,0 +1,48 @@
+# =============================================================================
+# Dockerfile para Dagster (webserver + daemon)
+# Build context: raíz del proyecto (National_Tourism_Project/)
+# =============================================================================
+FROM python:3.11-slim
+
+WORKDIR /opt/dagster
+
+# Dependencias del sistema
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Crear directorios
+RUN mkdir -p /opt/dagster/dagster_home /opt/dagster/data
+
+# Copiar configuración de Dagster
+COPY docker/configs/dagster.yaml /opt/dagster/dagster_home/dagster.yaml
+
+# Copiar proyecto Dagster
+COPY dagster/ /opt/dagster/app/
+
+# Copiar proyecto dbt
+COPY dbt/ /opt/dagster/dbt/
+
+# Instalar dependencias
+RUN pip install --no-cache-dir \
+    dagster \
+    dagster-webserver \
+    dagster-duckdb \
+    dagster-dbt \
+    dbt-core \
+    dbt-duckdb \
+    boto3 \
+    minio \
+    pandas \
+    pyarrow \
+    requests \
+    openpyxl
+
+# Instalar el proyecto Dagster como paquete editable
+RUN pip install --no-cache-dir -e /opt/dagster/app/
+
+EXPOSE 3000
+
+ENV DAGSTER_HOME=/opt/dagster/dagster_home

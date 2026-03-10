@@ -1,0 +1,106 @@
+# =============================================================================
+# CI/CD — GitHub Actions
+# =============================================================================
+# Pipeline que ejecuta:
+#   1. Linting de Python (ruff)
+#   2. dbt compile + test
+#   3. Tests unitarios de Dagster
+# =============================================================================
+
+name: CI — National Tourism Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: "3.11"
+  DBT_PROFILES_DIR: dbt
+
+jobs:
+  # -----------------------------------------------------------------
+  # Job 1: Linting
+  # -----------------------------------------------------------------
+  lint:
+    name: "Lint & Format"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Run ruff check
+        run: ruff check dagster/
+
+      - name: Run ruff format check
+        run: ruff format --check dagster/
+
+  # -----------------------------------------------------------------
+  # Job 2: dbt tests
+  # -----------------------------------------------------------------
+  dbt-test:
+    name: "dbt Compile & Test"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dbt
+        run: |
+          pip install dbt-core dbt-duckdb dbt-utils
+
+      - name: Install dbt packages
+        working-directory: dbt
+        run: dbt deps
+
+      - name: dbt compile
+        working-directory: dbt
+        run: dbt compile --target local
+
+      - name: dbt seed
+        working-directory: dbt
+        run: dbt seed --target local
+
+      - name: dbt test (schema tests)
+        working-directory: dbt
+        run: dbt test --target local --select "test_type:schema"
+        continue-on-error: true  # Los tests corren pero no bloquean el CI aún
+
+  # -----------------------------------------------------------------
+  # Job 3: Dagster tests
+  # -----------------------------------------------------------------
+  dagster-test:
+    name: "Dagster Unit Tests"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          pip install -e "dagster/.[dev]"
+
+      - name: Verify Dagster definitions load
+        run: |
+          cd dagster && python -c "from national_tourism.definitions import defs; print(f'Assets: {len(defs.get_all_asset_specs())}')"
+
+      - name: Run pytest
+        working-directory: dagster
+        run: pytest tests/ -v
+        continue-on-error: true  # Los tests se agregan incrementalmente

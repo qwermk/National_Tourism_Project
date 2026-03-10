@@ -1,0 +1,50 @@
+version: 2
+
+models:
+  - name: fct_tourism_arrivals
+    description: "Fact table de llegadas de turistas internacionales a Colombia."
+    columns:
+      - name: arrival_id
+        description: "Clave surrogate única."
+        tests:
+          - unique
+          - not_null
+      - name: anio
+        description: "Año del periodo."
+        tests:
+          - not_null
+      - name: total_visitantes
+        description: "Total de visitantes en el periodo."
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+
+  - name: fct_hotel_occupancy
+    description: "Fact table de ocupación hotelera mensual por departamento."
+    columns:
+      - name: occupancy_id
+        description: "Clave surrogate única."
+        tests:
+          - unique
+          - not_null
+      - name: porcentaje_ocupacion
+        description: "Porcentaje de ocupación."
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 100
+
+  - name: dim_departments
+    description: "Dimensión de departamentos de Colombia."
+    columns:
+      - name: codigo_dane
+        description: "Código DANE del departamento."
+        tests:
+          - unique
+          - not_null
+      - name: departamento
+        description: "Nombre del departamento."
+        tests:
+          - unique
+          - not_null

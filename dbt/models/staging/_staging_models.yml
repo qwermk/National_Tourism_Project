@@ -1,0 +1,52 @@
+version: 2
+
+models:
+  - name: stg_tourism_arrivals
+    description: "Llegadas de turistas internacionales limpiadas y estandarizadas."
+    columns:
+      - name: fecha_llegada
+        description: "Fecha de llegada."
+        tests:
+          - not_null
+      - name: anio
+        description: "Año de la llegada."
+        tests:
+          - not_null
+      - name: pais_origen
+        description: "País de origen del turista."
+        tests:
+          - not_null
+      - name: departamento_destino
+        description: "Departamento de destino."
+        tests:
+          - not_null
+      - name: numero_visitantes
+        description: "Número de visitantes."
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 100000
+
+  - name: stg_hotel_occupancy
+    description: "Ocupación hotelera limpiada y estandarizada."
+    columns:
+      - name: departamento
+        description: "Departamento colombiano."
+        tests:
+          - not_null
+      - name: porcentaje_ocupacion
+        description: "Porcentaje de ocupación hotelera."
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 100
+      - name: anio
+        tests:
+          - not_null
+      - name: mes
+        tests:
+          - not_null
+          - accepted_values:
+              values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]

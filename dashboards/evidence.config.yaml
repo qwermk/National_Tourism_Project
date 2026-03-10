@@ -1,0 +1,11 @@
+# =============================================================================
+# Evidence.dev — Configuración de fuentes de datos
+# =============================================================================
+# Conecta Evidence a DuckDB para leer los modelos Gold.
+# =============================================================================
+
+sources:
+  - name: tourism
+    type: duckdb
+    options:
+      filename: ../data/tourism.duckdb

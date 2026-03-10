@@ -1,0 +1,54 @@
+# =============================================================================
+# dbt Project — National Tourism Colombia
+# =============================================================================
+# Motor: DuckDB (local) / Snowflake (fase 2)
+# Arquitectura: Medallion (staging → intermediate → marts)
+# =============================================================================
+
+name: "national_tourism"
+version: "0.1.0"
+config-version: 2
+
+profile: "national_tourism"
+
+# Directorios
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# Variables del proyecto
+vars:
+  start_date: "2019-01-01"
+  end_date: "2024-12-31"
+
+# Materialización por defecto según la capa
+models:
+  national_tourism:
+    staging:
+      +materialized: view
+      +schema: staging
+      +tags: ["staging", "silver"]
+    intermediate:
+      +materialized: ephemeral
+      +tags: ["intermediate"]
+    marts:
+      +materialized: table
+      +schema: marts
+      +tags: ["marts", "gold"]
+
+# Seeds
+seeds:
+  national_tourism:
+    +schema: seeds
+
+# Tests
+tests:
+  national_tourism:
+    +severity: warn

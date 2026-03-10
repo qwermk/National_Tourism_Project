@@ -1,0 +1,58 @@
+# =============================================================================
+# Staging — Sources (definición de fuentes de datos)
+# =============================================================================
+# Las sources apuntan a las tablas/archivos Bronze cargados por Dagster.
+# DuckDB lee directamente desde MinIO via S3 protocol.
+# =============================================================================
+
+version: 2
+
+sources:
+  - name: bronze
+    description: "Datos crudos (Bronze layer) almacenados en MinIO como Parquet."
+    meta:
+      layer: bronze
+    tables:
+      - name: tourism_arrivals
+        description: "Datos crudos de llegadas de turistas internacionales a Colombia."
+        meta:
+          external_location: "read_parquet('s3://bronze/tourism_arrivals/arrivals.parquet')"
+        columns:
+          - name: fecha_llegada
+            description: "Fecha de llegada del turista."
+          - name: anio
+            description: "Año de la llegada."
+          - name: mes
+            description: "Mes de la llegada."
+          - name: pais_origen
+            description: "País de origen del turista."
+          - name: departamento_destino
+            description: "Departamento colombiano de destino."
+          - name: motivo_viaje
+            description: "Motivo del viaje (Turismo, Negocios, etc.)."
+          - name: punto_entrada
+            description: "Punto de entrada (Aéreo, Terrestre, Marítimo)."
+          - name: numero_visitantes
+            description: "Número de visitantes en el registro."
+          - name: gasto_estimado_usd
+            description: "Gasto estimado en dólares."
+
+      - name: hotel_occupancy
+        description: "Datos crudos de ocupación hotelera por departamento."
+        meta:
+          external_location: "read_parquet('s3://bronze/hotel_occupancy/occupancy.parquet')"
+        columns:
+          - name: anio
+            description: "Año del registro."
+          - name: mes
+            description: "Mes del registro."
+          - name: departamento
+            description: "Departamento colombiano."
+          - name: porcentaje_ocupacion
+            description: "Porcentaje de ocupación hotelera."
+          - name: habitaciones_disponibles
+            description: "Total de habitaciones disponibles."
+          - name: habitaciones_ocupadas
+            description: "Total de habitaciones ocupadas."
+          - name: tarifa_promedio_cop
+            description: "Tarifa promedio en pesos colombianos."

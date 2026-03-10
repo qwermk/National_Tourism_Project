@@ -1,0 +1,42 @@
+# =============================================================================
+# dbt Profiles — Configuración de conexiones
+# =============================================================================
+# Este archivo define los targets de conexión para cada plataforma.
+# En producción, usa variables de entorno para credenciales.
+# =============================================================================
+
+national_tourism:
+  target: local  # Target por defecto: DuckDB local
+
+  outputs:
+    # -----------------------------------------------------------------
+    # Local: DuckDB (Fase 1)
+    # -----------------------------------------------------------------
+    local:
+      type: duckdb
+      path: "{{ env_var('DUCKDB_DATABASE', '../data/tourism.duckdb') }}"
+      schema: main
+      threads: 4
+      extensions:
+        - httpfs
+        - parquet
+      settings:
+        s3_endpoint: "{{ env_var('MINIO_ENDPOINT', 'localhost:9000') }}"
+        s3_access_key_id: "{{ env_var('MINIO_ACCESS_KEY', 'minioadmin') }}"
+        s3_secret_access_key: "{{ env_var('MINIO_SECRET_KEY', 'minioadmin') }}"
+        s3_use_ssl: false
+        s3_url_style: path
+
+    # -----------------------------------------------------------------
+    # Snowflake (Fase 2 — descomentar cuando esté listo)
+    # -----------------------------------------------------------------
+    # snowflake:
+    #   type: snowflake
+    #   account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+    #   user: "{{ env_var('SNOWFLAKE_USER') }}"
+    #   password: "{{ env_var('SNOWFLAKE_PASSWORD') }}"
+    #   role: "{{ env_var('SNOWFLAKE_ROLE', 'TRANSFORM') }}"
+    #   database: "{{ env_var('SNOWFLAKE_DATABASE', 'TOURISM') }}"
+    #   warehouse: "{{ env_var('SNOWFLAKE_WAREHOUSE', 'TRANSFORM_WH') }}"
+    #   schema: PUBLIC
+    #   threads: 4
