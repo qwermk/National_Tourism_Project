@@ -48,3 +48,32 @@ models:
         tests:
           - unique
           - not_null
+
+  - name: dim_date
+    description: "Dimensión de fechas para análisis de series temporales (2019–2024)."
+    columns:
+      - name: date_day
+        description: "Fecha del día (clave primaria)."
+        tests:
+          - unique
+          - not_null
+      - name: anio
+        description: "Año de la fecha."
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 2019
+              max_value: 2024
+      - name: mes
+        description: "Mes de la fecha (1–12)."
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 1
+              max_value: 12
+      - name: trimestre
+        description: "Trimestre (Q1–Q4)."
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Q1', 'Q2', 'Q3', 'Q4']

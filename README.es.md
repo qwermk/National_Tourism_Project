@@ -24,36 +24,129 @@ Explorar y aprender el **Modern Data Stack** a través de un caso de uso real: e
 
 ### Fase 1: Stack Local Moderno (actual)
 
+```mermaid
+flowchart LR
+    subgraph Fuentes["📥 Fuentes de Datos"]
+        CITUR["CITUR\n(Llegadas)"]
+        DANE["DANE\n(Estadísticas)"]
+        MIGRA["Migración Col.\n(Flujos)"]
+        WB["Banco Mundial\n(Indicadores)"]
+    end
+
+    subgraph Orquestacion["⚙️ Dagster OSS — Orquestación"]
+        direction TB
+        subgraph Bronze["🥉 Bronze — Ingesta Cruda"]
+            RAW_ARR["raw_tourism_arrivals"]
+            RAW_OCC["raw_hotel_occupancy"]
+        end
+
+        subgraph Silver["🥈 Silver — Staging y Limpieza"]
+            STG_ARR["stg_tourism_arrivals"]
+            STG_OCC["stg_hotel_occupancy"]
+        end
+
+        subgraph Gold["🥇 Gold — Modelos de Negocio"]
+            FCT_ARR["fct_tourism_arrivals"]
+            FCT_OCC["fct_hotel_occupancy"]
+            DIM_DEP["dim_departments"]
+        end
+    end
+
+    subgraph Almacenamiento["💾 Almacenamiento y Procesamiento"]
+        MINIO[("MinIO\n(Compatible S3)")]
+        DUCKDB[("DuckDB\n(Motor OLAP)")]
+        DBT["dbt-core\n(Transformaciones SQL)"]
+    end
+
+    subgraph Visualizacion["📊 Dashboards"]
+        EVIDENCE["Evidence.dev"]
+    end
+
+    Fuentes -->|CSV / API| Bronze
+    Bronze -->|Parquet| MINIO
+    MINIO -->|Lectura| Silver
+    Silver -->|Datos limpios| Gold
+    Gold -->|Escritura| DUCKDB
+    Gold -->|Parquet| MINIO
+    DBT -->|Transformar| DUCKDB
+    DUCKDB -->|Consultas| EVIDENCE
 ```
-┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│   Fuentes   │───▶│    MinIO     │───▶│ DuckDB + dbt│───▶│ Evidence.dev│
-│  (CSV/API)  │    │ (S3 local)  │    │(Transformac.)│    │ (Dashboards)│
-└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
-                          │                   │
-                          └───────┬───────────┘
-                                  │
-                          ┌───────▼───────┐
-                          │  Dagster OSS  │
-                          │(Orquestación) │
-                          └───────────────┘
+
+#### Detalle del Flujo de Datos
+
+```mermaid
+flowchart TD
+    subgraph Ingesta["Capa Bronze"]
+        A["Fuentes CSV / API"] -->|Descarga y Validación| B["Subir a MinIO\n(bucket raw/)"]
+    end
+
+    subgraph Staging["Capa Silver"]
+        B -->|Leer Parquet| C["Normalización de columnas"]
+        C --> D["Deduplicación"]
+        D --> E["Casting de tipos y manejo de nulos"]
+        E --> F["Escribir en MinIO\n(bucket staging/)"]
+    end
+
+    subgraph Marts["Capa Gold"]
+        F -->|Agregar| G["Tablas de Hechos"]
+        F -->|Enriquecer| H["Tablas de Dimensiones"]
+        G --> I["Escribir en DuckDB + MinIO\n(bucket gold/)"]
+        H --> I
+    end
+
+    subgraph Servicio["Analítica"]
+        I -->|Consultas SQL| J["Dashboards Evidence.dev"]
+    end
+
+    SENSOR["🔔 Sensor MinIO\n(detecta archivos nuevos)"] -.->|Dispara| Ingesta
+    SCHEDULE["⏰ Schedule Diario\n(06:00 UTC)"] -.->|Dispara| Ingesta
+
+    style Ingesta fill:#cd7f32,color:#fff
+    style Staging fill:#c0c0c0,color:#000
+    style Marts fill:#ffd700,color:#000
+    style Servicio fill:#4a90d9,color:#fff
 ```
 
 **Componentes (todos open-source):**
-- **Orquestación:** Dagster OSS (Software-Defined Assets) — Apache 2.0
-- **Almacenamiento:** MinIO (compatible con S3) — AGPL v3
-- **Procesamiento:** DuckDB + dbt-core — MIT / Apache 2.0
-- **Visualización:** Evidence.dev — MIT
-- **Calidad de datos:** dbt tests — Apache 2.0
-- **Contenedores:** Docker Compose
+
+| Componente | Herramienta | Rol | Licencia |
+|------------|-------------|-----|---------|
+| Orquestación | Dagster OSS | Software-Defined Assets, sensores, schedules | Apache 2.0 |
+| Almacenamiento | MinIO | Object store compatible con S3 (Bronze/Silver/Gold) | AGPL v3 |
+| Procesamiento | DuckDB | Motor OLAP en proceso | MIT |
+| Transformaciones | dbt-core | Modelado de datos en SQL (capas Medallion) | Apache 2.0 |
+| Visualización | Evidence.dev | Dashboards BI basados en código | MIT |
+| Infraestructura | Docker Compose | Orquestación de contenedores | Apache 2.0 |
 
 > ⚠️ **Nota:** Este proyecto usa **Dagster OSS** (el núcleo open-source, licencia Apache 2.0), **no** Dagster Cloud (el producto comercial de pago). Todo se ejecuta sin ningún servicio de pago.
 
 ### Fase 2: Snowflake (próxima)
+
+```mermaid
+flowchart LR
+    Fuentes["📥 Fuentes"] --> Dagster["⚙️ Dagster OSS"]
+    Dagster -->|Cargar| SF[("❄️ Snowflake")]
+    SF -->|Transformar| DBT["dbt\n(target Snowflake)"]
+    DBT --> SF
+    SF -->|Consultar| Evidence["📊 Evidence.dev"]
+```
+
 - Migrar almacenamiento y procesamiento a Snowflake
 - Mantener Dagster como orquestador
 - dbt apuntando a Snowflake
 
 ### Fase 3: AWS / Cloud (futura)
+
+```mermaid
+flowchart LR
+    Fuentes["📥 Fuentes"] --> Dagster["⚙️ Dagster OSS"]
+    Dagster -->|Subir| S3[("🪣 Amazon S3")]
+    S3 -->|Consultar| Athena["Athena / Redshift"]
+    Athena -->|Transformar| DBT["dbt"]
+    DBT --> Athena
+    Athena -->|Consultar| Evidence["📊 Evidence.dev"]
+```
+
 - S3 + Redshift / Athena
 - Posible integración con Databricks
 

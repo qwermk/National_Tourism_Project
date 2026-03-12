@@ -56,3 +56,76 @@ sources:
             description: "Total de habitaciones ocupadas."
           - name: tarifa_promedio_cop
             description: "Tarifa promedio en pesos colombianos."
+
+      # ------------------------------------------------------------------
+      # Fuentes CITUR (datos.gov.co) — conectores reales (raw_citur_*)
+      # ------------------------------------------------------------------
+      - name: citur_arrivals
+        description: "Llegadas de turistas desde CITUR / datos.gov.co (raw_citur_arrivals asset)."
+        meta:
+          external_location: "read_parquet('s3://bronze/citur/tourism_arrivals.parquet')"
+        columns:
+          - name: fecha_llegada
+            description: "Fecha de llegada."
+          - name: anio
+            description: "Año de la llegada."
+          - name: mes
+            description: "Mes de la llegada."
+          - name: pais_origen
+            description: "País de origen del turista."
+          - name: departamento_destino
+            description: "Departamento colombiano de destino."
+          - name: motivo_viaje
+            description: "Motivo del viaje."
+          - name: punto_entrada
+            description: "Punto de entrada (Aéreo, Terrestre, Marítimo)."
+          - name: numero_visitantes
+            description: "Número de visitantes."
+          - name: gasto_estimado_usd
+            description: "Gasto estimado en USD."
+
+      - name: citur_hotel_occupancy
+        description: "Ocupación hotelera desde CITUR / datos.gov.co (raw_citur_hotel_occupancy asset)."
+        meta:
+          external_location: "read_parquet('s3://bronze/citur/hotel_occupancy.parquet')"
+        columns:
+          - name: anio
+            description: "Año del registro."
+          - name: mes
+            description: "Mes del registro."
+          - name: departamento
+            description: "Departamento colombiano."
+          - name: porcentaje_ocupacion
+            description: "Porcentaje de ocupación hotelera."
+          - name: habitaciones_disponibles
+            description: "Total de habitaciones disponibles."
+          - name: habitaciones_ocupadas
+            description: "Total de habitaciones ocupadas."
+          - name: tarifa_promedio_cop
+            description: "Tarifa promedio en pesos colombianos."
+
+  # ------------------------------------------------------------------------
+  # World Bank Reference Layer
+  # ------------------------------------------------------------------------
+  - name: world_bank
+    description: "Indicadores anuales del World Bank Open Data API para Colombia."
+    meta:
+      layer: bronze
+    tables:
+      - name: arrivals_annual
+        description: "Llegadas internacionales + indicadores de turismo — Colombia (World Bank)."
+        meta:
+          external_location: "read_parquet('s3://bronze/world_bank/arrivals_annual.parquet')"
+        columns:
+          - name: anio
+            description: "Año del indicador."
+          - name: indicador_codigo
+            description: "Código del indicador World Bank (ej. ST.INT.ARVL)."
+          - name: indicador_nombre
+            description: "Nombre descriptivo del indicador."
+          - name: valor
+            description: "Valor numérico del indicador."
+          - name: pais_codigo
+            description: "Código ISO3 del país (COL)."
+          - name: fuente
+            description: "Fuente del dato (world_bank | fallback)."

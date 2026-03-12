@@ -115,6 +115,26 @@ class MinIOResource(ConfigurableResource):
         objects = client.list_objects(bucket_name, prefix=prefix, recursive=True)
         return [obj.object_name for obj in objects]
 
+    def upload_bytes(
+        self,
+        bucket_name: str,
+        object_name: str,
+        data: bytes,
+        content_type: str = "application/octet-stream",
+    ) -> None:
+        """Sube bytes crudos a MinIO (útil para guardar JSON/CSV original en raw/)."""
+        import io
+        client = self._get_client()
+        buf = io.BytesIO(data)
+        client.put_object(
+            bucket_name=bucket_name,
+            object_name=object_name,
+            data=buf,
+            length=len(data),
+            content_type=content_type,
+        )
+        logger.info(f"Bytes subidos: {bucket_name}/{object_name} ({len(data):,} bytes)")
+
     def ensure_bucket_exists(self, bucket_name: str) -> None:
         """Crea el bucket si no existe."""
         client = self._get_client()

@@ -4,6 +4,7 @@
 
 from dagster import (
     AssetSelection,
+    DefaultScheduleStatus,
     ScheduleDefinition,
 )
 
@@ -15,5 +16,5 @@ daily_tourism_schedule = ScheduleDefinition(
     target=AssetSelection.all(),
     cron_schedule="0 6 * * *",  # Todos los días a las 6:00 AM UTC
     description="Ejecuta el pipeline completo de turismo diariamente a las 6:00 AM UTC.",
-    default_status=None,  # Se activa manualmente desde la UI
+    default_status=DefaultScheduleStatus.STOPPED,  # Se activa manualmente desde la UI
 )

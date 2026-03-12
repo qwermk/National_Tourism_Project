@@ -28,6 +28,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
+    "pytest-cov>=5.0",
     "ruff>=0.3",
     "dagster-webserver>=1.7",
 ]
@@ -47,3 +48,6 @@ select = ["E", "F", "I", "W"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "integration: Tests that require external services (MinIO, network). Run with: pytest -m integration",
+]

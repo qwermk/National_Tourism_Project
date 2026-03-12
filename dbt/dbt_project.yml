@@ -40,7 +40,7 @@ models:
       +tags: ["intermediate"]
     marts:
       +materialized: table
-      +schema: marts
+      +schema: gold
       +tags: ["marts", "gold"]
 
 # Seeds

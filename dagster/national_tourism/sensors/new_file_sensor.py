@@ -7,6 +7,7 @@
 
 from dagster import (
     AssetSelection,
+    DefaultSensorStatus,
     RunRequest,
     SensorDefinition,
     SensorEvaluationContext,
@@ -17,9 +18,10 @@ from dagster import (
 @sensor(
     name="new_raw_file_sensor",
     description="Detecta nuevos archivos en MinIO bucket 'raw' y dispara el pipeline.",
-    target=AssetSelection.keys("raw_tourism_arrivals", "raw_hotel_occupancy"),
+    target=AssetSelection.assets("raw_tourism_arrivals", "raw_hotel_occupancy"),
     minimum_interval_seconds=60,  # Verificar cada minuto
-    default_status=None,
+    default_status=DefaultSensorStatus.STOPPED,
+    required_resource_keys={"minio"},
 )
 def new_raw_file_sensor(context: SensorEvaluationContext, minio):
     """

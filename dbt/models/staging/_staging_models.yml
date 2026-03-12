@@ -50,3 +50,30 @@ models:
           - not_null
           - accepted_values:
               values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+
+  - name: stg_world_bank_arrivals
+    description: >
+      Totales anuales de turismo en Colombia del World Bank Open Data API.
+      Fuente de referencia para validación cruzada: indicadores ST.INT.ARVL,
+      ST.INT.DPRT y ST.INT.RCPT.CD.
+    columns:
+      - name: anio
+        description: "Año del indicador."
+        tests:
+          - not_null
+      - name: indicador_codigo
+        description: "Código del indicador World Bank."
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["ST.INT.ARVL", "ST.INT.DPRT", "ST.INT.RCPT.CD"]
+      - name: valor
+        description: "Valor del indicador."
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+      - name: fuente
+        description: "Origen del dato (world_bank o fallback)."
+        tests:
+          - not_null

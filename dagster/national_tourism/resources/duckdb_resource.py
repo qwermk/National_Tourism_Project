@@ -81,7 +81,8 @@ class DuckDBResource(ConfigurableResource):
         conn = self._get_connection()
         try:
             conn.execute(query)
-            count = conn.execute(f"SELECT COUNT(*) FROM {schema}.{table_name}").fetchone()[0]
+            row = conn.execute(f"SELECT COUNT(*) FROM {schema}.{table_name}").fetchone()
+            count = row[0] if row is not None else 0
             logger.info(f"Tabla {schema}.{table_name} cargada desde {s3_path}. Filas: {count}")
         finally:
             conn.close()

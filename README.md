@@ -24,36 +24,129 @@ Explore and learn the **Modern Data Stack** through a real-world use case: the a
 
 ### Phase 1: Local Modern Data Stack (current)
 
+```mermaid
+flowchart LR
+    subgraph Sources["📥 Data Sources"]
+        CITUR["CITUR\n(Arrivals)"]
+        DANE["DANE\n(Statistics)"]
+        MIGRA["Migración Col.\n(Flows)"]
+        WB["World Bank\n(Indicators)"]
+    end
+
+    subgraph Orchestration["⚙️ Dagster OSS — Orchestration"]
+        direction TB
+        subgraph Bronze["🥉 Bronze — Raw Ingestion"]
+            RAW_ARR["raw_tourism_arrivals"]
+            RAW_OCC["raw_hotel_occupancy"]
+        end
+
+        subgraph Silver["🥈 Silver — Staging & Cleaning"]
+            STG_ARR["stg_tourism_arrivals"]
+            STG_OCC["stg_hotel_occupancy"]
+        end
+
+        subgraph Gold["🥇 Gold — Business Models"]
+            FCT_ARR["fct_tourism_arrivals"]
+            FCT_OCC["fct_hotel_occupancy"]
+            DIM_DEP["dim_departments"]
+        end
+    end
+
+    subgraph Storage["💾 Storage & Processing"]
+        MINIO[("MinIO\n(S3-compatible)")]
+        DUCKDB[("DuckDB\n(OLAP Engine)")]
+        DBT["dbt-core\n(SQL Transforms)"]
+    end
+
+    subgraph Visualization["📊 Dashboards"]
+        EVIDENCE["Evidence.dev"]
+    end
+
+    Sources -->|CSV / API| Bronze
+    Bronze -->|Parquet| MINIO
+    MINIO -->|Read| Silver
+    Silver -->|Clean data| Gold
+    Gold -->|Write| DUCKDB
+    Gold -->|Parquet| MINIO
+    DBT -->|Transform| DUCKDB
+    DUCKDB -->|Query| EVIDENCE
 ```
-┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│   Sources   │───▶│    MinIO     │───▶│ DuckDB + dbt│───▶│ Evidence.dev│
-│  (CSV/API)  │    │ (local S3)  │    │(Transforms) │    │ (Dashboards)│
-└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
-                          │                   │
-                          └───────┬───────────┘
-                                  │
-                          ┌───────▼───────┐
-                          │  Dagster OSS  │
-                          │(Orchestration)│
-                          └───────────────┘
+
+#### Data Flow Detail
+
+```mermaid
+flowchart TD
+    subgraph Ingestion["Bronze Layer"]
+        A["CSV / API Sources"] -->|Download & Validate| B["Upload to MinIO\n(raw/ bucket)"]
+    end
+
+    subgraph Staging["Silver Layer"]
+        B -->|Read Parquet| C["Column Normalization"]
+        C --> D["Deduplication"]
+        D --> E["Type Casting & Null Handling"]
+        E --> F["Write to MinIO\n(staging/ bucket)"]
+    end
+
+    subgraph Marts["Gold Layer"]
+        F -->|Aggregate| G["Fact Tables"]
+        F -->|Enrich| H["Dimension Tables"]
+        G --> I["Write to DuckDB + MinIO\n(gold/ bucket)"]
+        H --> I
+    end
+
+    subgraph Serving["Analytics"]
+        I -->|SQL queries| J["Evidence.dev Dashboards"]
+    end
+
+    SENSOR["🔔 MinIO Sensor\n(detects new files)"] -.->|Triggers| Ingestion
+    SCHEDULE["⏰ Daily Schedule\n(06:00 UTC)"] -.->|Triggers| Ingestion
+
+    style Ingestion fill:#cd7f32,color:#fff
+    style Staging fill:#c0c0c0,color:#000
+    style Marts fill:#ffd700,color:#000
+    style Serving fill:#4a90d9,color:#fff
 ```
 
 **Components (all open-source):**
-- **Orchestration:** Dagster OSS (Software-Defined Assets) — Apache 2.0
-- **Storage:** MinIO (S3-compatible) — AGPL v3
-- **Processing:** DuckDB + dbt-core — MIT / Apache 2.0
-- **Visualization:** Evidence.dev — MIT
-- **Data Quality:** dbt tests — Apache 2.0
-- **Containers:** Docker Compose
+
+| Component | Tool | Role | License |
+|-----------|------|------|---------|
+| Orchestration | Dagster OSS | Software-Defined Assets, sensors, schedules | Apache 2.0 |
+| Storage | MinIO | S3-compatible object store (Bronze/Silver/Gold) | AGPL v3 |
+| Processing | DuckDB | In-process OLAP engine | MIT |
+| Transforms | dbt-core | SQL-based data modeling (Medallion layers) | Apache 2.0 |
+| Visualization | Evidence.dev | Code-driven BI dashboards | MIT |
+| Infrastructure | Docker Compose | Container orchestration | Apache 2.0 |
 
 > ⚠️ **Note:** This project uses **Dagster OSS** (the open-source core, Apache 2.0 license), **not** Dagster Cloud (the paid commercial product). Everything runs without any paid services.
 
 ### Phase 2: Snowflake (next)
+
+```mermaid
+flowchart LR
+    Sources["📥 Sources"] --> Dagster["⚙️ Dagster OSS"]
+    Dagster -->|Load| SF[("❄️ Snowflake")]
+    SF -->|Transform| DBT["dbt\n(Snowflake target)"]
+    DBT --> SF
+    SF -->|Query| Evidence["📊 Evidence.dev"]
+```
+
 - Migrate storage and processing to Snowflake
 - Keep Dagster as orchestrator
 - dbt targeting Snowflake
 
 ### Phase 3: AWS / Cloud (future)
+
+```mermaid
+flowchart LR
+    Sources["📥 Sources"] --> Dagster["⚙️ Dagster OSS"]
+    Dagster -->|Upload| S3[("🪣 Amazon S3")]
+    S3 -->|Query| Athena["Athena / Redshift"]
+    Athena -->|Transform| DBT["dbt"]
+    DBT --> Athena
+    Athena -->|Query| Evidence["📊 Evidence.dev"]
+```
+
 - S3 + Redshift / Athena
 - Possible Databricks integration
 

@@ -20,6 +20,8 @@ from dagster import (
     asset,
 )
 
+from national_tourism.resources.minio_resource import MinIOResource
+
 
 @asset(
     description="Datos crudos de llegadas de turistas internacionales a Colombia (Bronze layer).",
@@ -32,7 +34,7 @@ from dagster import (
 )
 def raw_tourism_arrivals(
     context: AssetExecutionContext,
-    minio,
+    minio: MinIOResource,
 ) -> MaterializeResult:
     """
     Ingesta datos de llegadas de turistas internacionales.
@@ -49,6 +51,16 @@ def raw_tourism_arrivals(
 
     if csv_files:
         context.log.info(f"Encontrados {len(csv_files)} archivos CSV de llegadas.")
+        # Guardar copia original en raw/ antes de cualquier transformación
+        for csv_path in csv_files:
+            raw_bytes = csv_path.read_bytes()
+            minio.upload_bytes(
+                bucket_name="raw",
+                object_name=f"tourism_arrivals/{csv_path.name}",
+                data=raw_bytes,
+                content_type="text/csv",
+            )
+            context.log.info(f"CSV original guardado en raw/tourism_arrivals/{csv_path.name}")
         dfs = [pd.read_csv(f, encoding="latin-1") for f in csv_files]
         df = pd.concat(dfs, ignore_index=True)
     else:
@@ -56,7 +68,7 @@ def raw_tourism_arrivals(
         context.log.warning("No se encontraron CSVs. Creando dataset de ejemplo.")
         df = _create_sample_arrivals_data()
 
-    # Subir a MinIO como Parquet
+    # Subir a MinIO como Parquet (Bronze)
     minio.upload_dataframe_as_parquet(
         bucket_name="bronze",
         object_name="tourism_arrivals/arrivals.parquet",
@@ -69,7 +81,8 @@ def raw_tourism_arrivals(
             "num_columns": MetadataValue.int(len(df.columns)),
             "columns": MetadataValue.text(", ".join(df.columns.tolist())),
             "preview": MetadataValue.md(df.head(5).to_markdown()),
-            "minio_path": MetadataValue.text("bronze/tourism_arrivals/arrivals.parquet"),
+            "raw_path": MetadataValue.text("raw/tourism_arrivals/ (solo si hay CSV local)"),
+            "bronze_path": MetadataValue.text("bronze/tourism_arrivals/arrivals.parquet"),
         }
     )
 
@@ -85,7 +98,7 @@ def raw_tourism_arrivals(
 )
 def raw_hotel_occupancy(
     context: AssetExecutionContext,
-    minio,
+    minio: MinIOResource,
 ) -> MaterializeResult:
     """
     Ingesta datos de ocupación hotelera por departamento.
@@ -95,6 +108,16 @@ def raw_hotel_occupancy(
 
     if csv_files:
         context.log.info(f"Encontrados {len(csv_files)} archivos CSV de ocupación.")
+        # Guardar copia original en raw/
+        for csv_path in csv_files:
+            raw_bytes = csv_path.read_bytes()
+            minio.upload_bytes(
+                bucket_name="raw",
+                object_name=f"hotel_occupancy/{csv_path.name}",
+                data=raw_bytes,
+                content_type="text/csv",
+            )
+            context.log.info(f"CSV original guardado en raw/hotel_occupancy/{csv_path.name}")
         dfs = [pd.read_csv(f, encoding="latin-1") for f in csv_files]
         df = pd.concat(dfs, ignore_index=True)
     else:
@@ -113,7 +136,8 @@ def raw_hotel_occupancy(
             "num_columns": MetadataValue.int(len(df.columns)),
             "columns": MetadataValue.text(", ".join(df.columns.tolist())),
             "preview": MetadataValue.md(df.head(5).to_markdown()),
-            "minio_path": MetadataValue.text("bronze/hotel_occupancy/occupancy.parquet"),
+            "raw_path": MetadataValue.text("raw/hotel_occupancy/ (solo si hay CSV local)"),
+            "bronze_path": MetadataValue.text("bronze/hotel_occupancy/occupancy.parquet"),
         }
     )
 

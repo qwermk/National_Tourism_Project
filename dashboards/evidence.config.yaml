@@ -2,10 +2,14 @@
 # Evidence.dev — Configuración de fuentes de datos
 # =============================================================================
 # Conecta Evidence a DuckDB para leer los modelos Gold.
+#
+# Ruta del archivo DuckDB:
+#   - Desarrollo local:  ../data/tourism.duckdb  (relativa a este directorio)
+#   - Docker:           /data/tourism.duckdb      (volumen compartido dagster-data)
 # =============================================================================
 
 sources:
   - name: tourism
     type: duckdb
     options:
-      filename: ../data/tourism.duckdb
+      filename: ${EVIDENCE_DATABASE:../data/tourism.duckdb}
