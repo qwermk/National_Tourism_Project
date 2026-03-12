@@ -2,10 +2,12 @@
   "name": "national-tourism-dashboards",
   "version": "0.0.1",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "evidence dev --port 3333",
-    "build": "evidence build",
-    "preview": "evidence preview"
+    "dev": "node ./node_modules/@evidence-dev/evidence/cli.js dev --port 3333",
+    "build": "node ./node_modules/@evidence-dev/evidence/cli.js build",
+    "preview": "node ./node_modules/@evidence-dev/evidence/cli.js preview",
+    "sources": "node ./node_modules/@evidence-dev/evidence/cli.js sources"
   },
   "devDependencies": {
     "@evidence-dev/evidence": "latest",
