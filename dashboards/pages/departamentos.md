@@ -7,7 +7,7 @@ description: Detalle de turismo y ocupación por departamento colombiano
 
 ```sql departments
 select distinct departamento_destino as departamento
-from gold.fct_tourism_arrivals
+from tourism.fct_tourism_arrivals
 order by departamento
 ```
 
@@ -23,7 +23,7 @@ select
     mes,
     sum(total_visitantes) as total_visitantes,
     round(sum(gasto_total_usd), 0) as gasto_total_usd
-from gold.fct_tourism_arrivals
+from tourism.fct_tourism_arrivals
 where departamento_destino = '${inputs.selected_dept}'
 group by anio, mes
 order by anio, mes
@@ -47,7 +47,7 @@ select
     mes,
     avg_ocupacion,
     tarifa_promedio_cop
-from gold.fct_hotel_occupancy
+from tourism.fct_hotel_occupancy
 where departamento = '${inputs.selected_dept}'
 order by anio, mes
 ```

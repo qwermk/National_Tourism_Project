@@ -1,0 +1,4 @@
+name: tourism
+type: duckdb
+options:
+  filename: ../../../data/tourism.duckdb

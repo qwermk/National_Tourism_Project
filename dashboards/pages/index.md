@@ -17,7 +17,7 @@ select
     anio,
     sum(total_visitantes) as total_visitantes,
     round(sum(gasto_total_usd), 0) as gasto_total_usd
-from gold.fct_tourism_arrivals
+from tourism.fct_tourism_arrivals
 group by anio
 order by anio
 ```
@@ -46,7 +46,7 @@ select
     pais_origen,
     sum(total_visitantes) as total_visitantes,
     round(avg(gasto_promedio_usd), 2) as gasto_promedio_usd
-from gold.fct_tourism_arrivals
+from tourism.fct_tourism_arrivals
 group by pais_origen
 order by total_visitantes desc
 limit 10
@@ -72,7 +72,7 @@ select
     mes,
     departamento,
     avg_ocupacion
-from gold.fct_hotel_occupancy
+from tourism.fct_hotel_occupancy
 order by anio, mes
 ```
 
@@ -94,7 +94,7 @@ select
     mes,
     sum(total_visitantes) as total_visitantes,
     round(avg(gasto_promedio_usd), 2) as gasto_promedio
-from gold.fct_tourism_arrivals
+from tourism.fct_tourism_arrivals
 group by mes
 order by mes
 ```

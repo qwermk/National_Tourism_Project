@@ -9,7 +9,10 @@
 # =============================================================================
 
 plugins:
-  "@evidence-dev/duckdb": {}
+  components:
+    "@evidence-dev/core-components": {}
+  datasources:
+    "@evidence-dev/duckdb": {}
 
 sources:
   tourism:
