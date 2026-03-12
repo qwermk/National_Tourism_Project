@@ -23,10 +23,10 @@ cleaned as (
         cast(mes as integer)                as mes,
 
         -- Dimensiones (estandarizadas)
-        trim(initcap(pais_origen))          as pais_origen,
-        trim(initcap(departamento_destino)) as departamento_destino,
-        trim(initcap(motivo_viaje))         as motivo_viaje,
-        trim(initcap(punto_entrada))        as punto_entrada,
+        trim({{ initcap('pais_origen') }})          as pais_origen,
+        trim({{ initcap('departamento_destino') }}) as departamento_destino,
+        trim({{ initcap('motivo_viaje') }})         as motivo_viaje,
+        trim({{ initcap('punto_entrada') }})        as punto_entrada,
 
         -- Métricas
         coalesce(cast(numero_visitantes as integer), 0)  as numero_visitantes,

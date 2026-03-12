@@ -17,7 +17,7 @@ cleaned as (
         make_date(anio, mes, 1)                 as fecha_periodo,
 
         -- Dimensiones
-        trim(initcap(departamento))             as departamento,
+        trim({{ initcap('departamento') }})             as departamento,
 
         -- Métricas (validadas)
         least(greatest(cast(porcentaje_ocupacion as double), 0), 100)
