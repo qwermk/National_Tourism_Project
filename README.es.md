@@ -38,17 +38,25 @@ flowchart LR
         subgraph Bronze["🥉 Bronze — Ingesta Cruda"]
             RAW_ARR["raw_tourism_arrivals"]
             RAW_OCC["raw_hotel_occupancy"]
+            RAW_WB["raw_world_bank_arrivals"]
+            RAW_DANE["raw_dane_tourism_gdp"]
+            RAW_MIG["raw_migracion_flows"]
         end
 
         subgraph Silver["🥈 Silver — Staging y Limpieza"]
             STG_ARR["stg_tourism_arrivals"]
             STG_OCC["stg_hotel_occupancy"]
+            STG_DANE["stg_dane_tourism_gdp"]
+            STG_MIG["stg_migracion_flows"]
         end
 
         subgraph Gold["🥇 Gold — Modelos de Negocio"]
             FCT_ARR["fct_tourism_arrivals"]
             FCT_OCC["fct_hotel_occupancy"]
+            FCT_GDP["fct_tourism_gdp"]
+            FCT_MIG["fct_migration_flows"]
             DIM_DEP["dim_departments"]
+            DIM_DATE["dim_date"]
         end
     end
 
@@ -59,7 +67,7 @@ flowchart LR
     end
 
     subgraph Visualizacion["📊 Dashboards"]
-        EVIDENCE["Evidence.dev"]
+        STREAMLIT["Streamlit + Plotly"]
     end
 
     Fuentes -->|CSV / API| Bronze
@@ -69,7 +77,7 @@ flowchart LR
     Gold -->|Escritura| DUCKDB
     Gold -->|Parquet| MINIO
     DBT -->|Transformar| DUCKDB
-    DUCKDB -->|Consultas| EVIDENCE
+    DUCKDB -->|Consultas| STREAMLIT
 ```
 
 #### Detalle del Flujo de Datos
@@ -95,7 +103,7 @@ flowchart TD
     end
 
     subgraph Servicio["Analítica"]
-        I -->|Consultas SQL| J["Dashboards Evidence.dev"]
+        I -->|Consultas SQL| J["Dashboards Streamlit"]
     end
 
     SENSOR["🔔 Sensor MinIO\n(detecta archivos nuevos)"] -.->|Dispara| Ingesta
@@ -115,7 +123,7 @@ flowchart TD
 | Almacenamiento | MinIO | Object store compatible con S3 (Bronze/Silver/Gold) | AGPL v3 |
 | Procesamiento | DuckDB | Motor OLAP en proceso | MIT |
 | Transformaciones | dbt-core | Modelado de datos en SQL (capas Medallion) | Apache 2.0 |
-| Visualización | Evidence.dev | Dashboards BI basados en código | MIT |
+| Visualización | Streamlit + Plotly | Dashboards interactivos en Python | Apache 2.0 |
 | Infraestructura | Docker Compose | Orquestación de contenedores | Apache 2.0 |
 
 > ⚠️ **Nota:** Este proyecto usa **Dagster OSS** (el núcleo open-source, licencia Apache 2.0), **no** Dagster Cloud (el producto comercial de pago). Todo se ejecuta sin ningún servicio de pago.
@@ -128,7 +136,7 @@ flowchart LR
     Dagster -->|Cargar| SF[("❄️ Snowflake")]
     SF -->|Transformar| DBT["dbt\n(target Snowflake)"]
     DBT --> SF
-    SF -->|Consultar| Evidence["📊 Evidence.dev"]
+    SF -->|Consultar| Streamlit["📊 Streamlit"]
 ```
 
 - Migrar almacenamiento y procesamiento a Snowflake
@@ -144,7 +152,7 @@ flowchart LR
     S3 -->|Consultar| Athena["Athena / Redshift"]
     Athena -->|Transformar| DBT["dbt"]
     DBT --> Athena
-    Athena -->|Consultar| Evidence["📊 Evidence.dev"]
+    Athena -->|Consultar| Streamlit["📊 Streamlit"]
 ```
 
 - S3 + Redshift / Athena
@@ -163,9 +171,9 @@ National_Tourism_Project/
 │       ├── __init__.py
 │       ├── definitions.py           # Punto de entrada de Dagster
 │       ├── assets/                  # Software-Defined Assets
-│       │   ├── ingestion/           # Bronze: extracción de fuentes
-│       │   ├── staging/             # Silver: limpieza y estandarización
-│       │   └── marts/               # Gold: modelos de negocio
+│       │   ├── ingestion/           # Bronze: 7 assets de ingesta
+│       │   ├── staging/             # (Legacy — reemplazado por dbt SQL)
+│       │   └── marts/               # (Legacy — reemplazado por dbt SQL)
 │       ├── resources/               # Conexiones (MinIO, DuckDB)
 │       ├── sensors/                 # Disparadores automáticos
 │       └── schedules/               # Programación de ejecuciones
@@ -187,11 +195,13 @@ National_Tourism_Project/
 │   ├── local/                       # Versión local (DuckDB + MinIO)
 │   ├── snowflake/                   # Versión Snowflake
 │   └── aws/                         # Versión AWS
-├── dashboards/                      # Evidence.dev
+├── dashboards/                      # Streamlit (app.py + requirements.txt)
 ├── data/                            # Datos de muestra
 │   ├── raw/                         # Archivos descargados
 │   └── seeds/                       # Catálogos y dimensiones
 ├── scripts/                         # Scripts auxiliares
+├── docs/
+│   └── GUIA_SETUP.md                    # Guía paso a paso (español)
 ├── .github/
 │   └── workflows/                   # CI/CD
 │       └── ci.yml
@@ -220,7 +230,7 @@ National_Tourism_Project/
 git clone https://github.com/tu-usuario/National_Tourism_Project.git
 cd National_Tourism_Project
 
-# 2. Levantar servicios (MinIO, Dagster, Evidence)
+# 2. Levantar servicios (MinIO, Dagster, Streamlit)
 docker compose -f docker/docker-compose.yml up -d
 
 # 3. Instalar dependencias de Python
@@ -235,8 +245,8 @@ cd dbt && dbt deps && cd ..
 # 6. Abrir consola de MinIO
 # → http://localhost:9001 (usuario: minioadmin / contraseña: minioadmin)
 
-# 7. Abrir dashboards de Evidence.dev
-# → http://localhost:3333
+# 7. Abrir dashboards de Streamlit
+# → http://localhost:8501
 ```
 
 ## 📈 Métricas Clave
@@ -264,12 +274,18 @@ Se usan **dbt tests** para validar:
 | [MinIO](https://github.com/minio/minio) | Almacenamiento S3 | AGPL v3 | ✅ Sí |
 | [DuckDB](https://github.com/duckdb/duckdb) | Motor OLAP | MIT | ✅ Sí |
 | [dbt-core](https://github.com/dbt-labs/dbt-core) | Transformaciones SQL | Apache 2.0 | ✅ Sí |
-| [Evidence.dev](https://github.com/evidence-dev/evidence) | Dashboards | MIT | ✅ Sí |
+| [Streamlit](https://github.com/streamlit/streamlit) | Dashboards interactivos | Apache 2.0 | ✅ Sí |
+| [Plotly](https://github.com/plotly/plotly.py) | Gráficas interactivas | MIT | ✅ Sí |
 | [Docker](https://www.docker.com/) | Contenedores | Apache 2.0 | ✅ Sí |
 
 > **Dagster OSS vs Dagster Cloud:** Este proyecto usa el núcleo open-source de Dagster,
 > instalado con `pip install dagster`. Dagster Cloud es un servicio administrado de pago
 > que **no** se necesita ni se usa aquí.
+
+## 📨 Documentación adicional
+
+- [📘 Guía Paso a Paso](docs/GUIA_SETUP.md) — Configuración detallada para principiantes
+- [🇬🇧 English version](README.md) — This README in English
 
 ## 🤝 Contribuciones
 

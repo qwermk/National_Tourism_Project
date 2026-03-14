@@ -1,4 +1,10 @@
 # =============================================================================
 # Assets — Paquete marts (Gold Layer)
 # =============================================================================
-from national_tourism.assets.marts.tourism_marts import *  # noqa: F401, F403
+#
+# ⚠️ NOTA: La lógica de marts ahora se maneja 100% con dbt (SQL).
+# Ver: dbt/models/marts/
+#
+# Este paquete ya NO exporta assets de Python.
+# Se conserva vacío para no romper la estructura de paquetes de Python.
+# =============================================================================

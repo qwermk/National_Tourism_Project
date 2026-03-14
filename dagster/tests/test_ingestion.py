@@ -34,29 +34,29 @@ class TestRawTourismArrivals:
     def test_synthetic_data_has_required_columns(self):
         from national_tourism.assets.ingestion.tourism_arrivals import _create_sample_arrivals_data
         df = _create_sample_arrivals_data()
-        required = {"anio", "mes", "pais_origen", "departamento_destino", "numero_visitantes", "gasto_estimado_usd"}
+        required = {"year", "month", "country_of_origin", "destination_department", "number_of_visitors", "estimated_spending_usd"}
         assert not (required - set(df.columns))
 
     def test_synthetic_data_no_null_visitors(self):
         from national_tourism.assets.ingestion.tourism_arrivals import _create_sample_arrivals_data
         df = _create_sample_arrivals_data()
-        assert df["numero_visitantes"].isna().sum() == 0
+        assert df["number_of_visitors"].isna().sum() == 0
 
     def test_synthetic_data_positive_visitors(self):
         from national_tourism.assets.ingestion.tourism_arrivals import _create_sample_arrivals_data
         df = _create_sample_arrivals_data()
-        assert (df["numero_visitantes"] >= 0).all()
+        assert (df["number_of_visitors"] >= 0).all()
 
     def test_synthetic_data_valid_year_range(self):
         from national_tourism.assets.ingestion.tourism_arrivals import _create_sample_arrivals_data
         df = _create_sample_arrivals_data()
-        assert df["anio"].min() >= 2019
-        assert df["anio"].max() <= 2024
+        assert df["year"].min() >= 2019
+        assert df["year"].max() <= 2024
 
     def test_synthetic_data_valid_months(self):
         from national_tourism.assets.ingestion.tourism_arrivals import _create_sample_arrivals_data
         df = _create_sample_arrivals_data()
-        assert df["mes"].between(1, 12).all()
+        assert df["month"].between(1, 12).all()
 
     def test_materialise_result_has_metadata(self, asset_context, mock_minio):
         from national_tourism.assets.ingestion.tourism_arrivals import raw_tourism_arrivals
@@ -72,19 +72,19 @@ class TestRawHotelOccupancy:
     def test_synthetic_data_has_required_columns(self):
         from national_tourism.assets.ingestion.tourism_arrivals import _create_sample_occupancy_data
         df = _create_sample_occupancy_data()
-        required = {"anio", "mes", "departamento", "porcentaje_ocupacion",
-                    "habitaciones_disponibles", "habitaciones_ocupadas", "tarifa_promedio_cop"}
+        required = {"year", "month", "department", "occupancy_rate",
+                    "available_rooms", "occupied_rooms", "average_rate_cop"}
         assert not (required - set(df.columns))
 
     def test_occupancy_rate_in_valid_range(self):
         from national_tourism.assets.ingestion.tourism_arrivals import _create_sample_occupancy_data
         df = _create_sample_occupancy_data()
-        assert df["porcentaje_ocupacion"].between(0, 100).all()
+        assert df["occupancy_rate"].between(0, 100).all()
 
     def test_rooms_occupied_le_available(self):
         from national_tourism.assets.ingestion.tourism_arrivals import _create_sample_occupancy_data
         df = _create_sample_occupancy_data()
-        assert (df["habitaciones_ocupadas"] <= df["habitaciones_disponibles"]).all()
+        assert (df["occupied_rooms"] <= df["available_rooms"]).all()
 
     def test_upload_called_to_correct_bucket(self, asset_context, mock_minio):
         from national_tourism.assets.ingestion.tourism_arrivals import raw_hotel_occupancy

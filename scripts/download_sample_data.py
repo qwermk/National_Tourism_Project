@@ -39,10 +39,10 @@ def main():
         if len(data) > 1 and data[1]:
             records = [
                 {
-                    "anio": item["date"],
-                    "pais": "Colombia",
-                    "indicador": item["indicator"]["value"],
-                    "valor": item["value"],
+                    "year": item["date"],
+                    "country": "Colombia",
+                    "indicator": item["indicator"]["value"],
+                    "value": item["value"],
                 }
                 for item in data[1]
                 if item["value"] is not None
@@ -122,21 +122,21 @@ def _generate_synthetic_arrivals(output_dir: Path):
                     visitors = int(base * share * np.random.uniform(0.02, 0.15))
                     if visitors > 0:
                         records.append({
-                            "fecha_llegada": f"{year}-{month:02d}-15",
-                            "anio": year,
-                            "mes": month,
-                            "pais_origen": country,
-                            "departamento_destino": dept,
-                            "motivo_viaje": np.random.choice(
+                            "arrival_date": f"{year}-{month:02d}-15",
+                            "year": year,
+                            "month": month,
+                            "country_of_origin": country,
+                            "destination_department": dept,
+                            "travel_purpose": np.random.choice(
                                 ["Turismo", "Negocios", "Eventos", "Educación", "Salud"],
                                 p=[0.55, 0.20, 0.10, 0.08, 0.07],
                             ),
-                            "punto_entrada": np.random.choice(
+                            "entry_point": np.random.choice(
                                 ["Aéreo", "Terrestre", "Marítimo"],
                                 p=[0.70, 0.22, 0.08],
                             ),
-                            "numero_visitantes": visitors,
-                            "gasto_estimado_usd": round(
+                            "number_of_visitors": visitors,
+                            "estimated_spending_usd": round(
                                 visitors * np.random.uniform(800, 2500), 2
                             ),
                         })
@@ -184,13 +184,13 @@ def _generate_synthetic_occupancy(output_dir: Path):
                 rooms = np.random.randint(800, 6000)
 
                 records.append({
-                    "anio": year,
-                    "mes": month,
-                    "departamento": dept,
-                    "porcentaje_ocupacion": round(occ, 1),
-                    "habitaciones_disponibles": rooms,
-                    "habitaciones_ocupadas": int(rooms * occ / 100),
-                    "tarifa_promedio_cop": round(
+                    "year": year,
+                    "month": month,
+                    "department": dept,
+                    "occupancy_rate": round(occ, 1),
+                    "available_rooms": rooms,
+                    "occupied_rooms": int(rooms * occ / 100),
+                    "average_rate_cop": round(
                         np.random.uniform(90000, 450000), 0
                     ),
                 })

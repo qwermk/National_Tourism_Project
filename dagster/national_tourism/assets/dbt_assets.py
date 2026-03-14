@@ -50,15 +50,30 @@ class NationalTourismDbtTranslator(DagsterDbtTranslator):
     cadena de dependencias: ingestion → dbt staging → dbt marts.
     """
 
+    # Mapeo de dbt sources → Dagster asset keys de ingesta.
+    # Cada source definido en _sources.yml debe apuntar al asset Python
+    # que produce el Parquet correspondiente en MinIO.
+    _SOURCE_TO_ASSET: dict[tuple[str, str], str] = {
+        ("bronze", "tourism_arrivals"): "raw_tourism_arrivals",
+        ("bronze", "hotel_occupancy"): "raw_hotel_occupancy",
+        ("bronze", "citur_arrivals"): "raw_citur_arrivals",
+        ("bronze", "citur_hotel_occupancy"): "raw_citur_hotel_occupancy",
+        ("world_bank", "arrivals_annual"): "raw_world_bank_arrivals",
+        ("world_bank", "regional_comparison"): "raw_world_bank_regional",
+        ("dane", "tourism_gdp"): "raw_dane_tourism_gdp",
+        ("migracion", "flows"): "raw_migracion_flows",
+        ("aerocivil", "passengers"): "raw_aerocivil_passengers",
+        ("banrep", "tourism_balance"): "raw_banrep_tourism_balance",
+    }
+
     def get_asset_key(self, dbt_resource_props: Mapping[str, Any]) -> AssetKey:
         resource_type = dbt_resource_props.get("resource_type", "")
         if resource_type == "source":
             source_name = dbt_resource_props.get("source_name", "")
             name = dbt_resource_props.get("name", "")
-            if source_name == "bronze" and name == "tourism_arrivals":
-                return AssetKey("raw_tourism_arrivals")
-            if source_name == "bronze" and name == "hotel_occupancy":
-                return AssetKey("raw_hotel_occupancy")
+            asset_name = self._SOURCE_TO_ASSET.get((source_name, name))
+            if asset_name:
+                return AssetKey(asset_name)
         return super().get_asset_key(dbt_resource_props)
 
     def get_group_name(self, dbt_resource_props: Mapping[str, Any]) -> str | None:

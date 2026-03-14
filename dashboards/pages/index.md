@@ -14,25 +14,25 @@ alimentado por el pipeline de datos **Dagster + dbt + DuckDB**.
 
 ```sql arrivals_by_year
 select
-    anio,
-    sum(total_visitantes) as total_visitantes,
-    round(sum(gasto_total_usd), 0) as gasto_total_usd
+    year,
+    sum(total_visitors) as total_visitors,
+    round(sum(total_spending_usd), 0) as total_spending_usd
 from tourism.fct_tourism_arrivals
-group by anio
-order by anio
+group by year
+order by year
 ```
 
 <BarChart
     data={arrivals_by_year}
-    x=anio
-    y=total_visitantes
+    x=year
+    y=total_visitors
     title="Total de Visitantes por Año"
 />
 
 <LineChart
     data={arrivals_by_year}
-    x=anio
-    y=gasto_total_usd
+    x=year
+    y=total_spending_usd
     title="Gasto Total (USD) por Año"
     yFmt=usd
 />
@@ -43,12 +43,12 @@ order by anio
 
 ```sql top_countries
 select
-    pais_origen,
-    sum(total_visitantes) as total_visitantes,
-    round(avg(gasto_promedio_usd), 2) as gasto_promedio_usd
+    country_of_origin,
+    sum(total_visitors) as total_visitors,
+    round(avg(average_spending_usd), 2) as average_spending_usd
 from tourism.fct_tourism_arrivals
-group by pais_origen
-order by total_visitantes desc
+group by country_of_origin
+order by total_visitors desc
 limit 10
 ```
 
@@ -56,8 +56,8 @@ limit 10
 
 <BarChart
     data={top_countries}
-    x=pais_origen
-    y=total_visitantes
+    x=country_of_origin
+    y=total_visitors
     title="Principales Países de Origen"
     swapXY=true
 />
@@ -68,19 +68,19 @@ limit 10
 
 ```sql occupancy_trend
 select
-    anio,
-    mes,
-    departamento,
-    avg_ocupacion
+    year,
+    month,
+    department,
+    occupancy_rate
 from tourism.fct_hotel_occupancy
-order by anio, mes
+order by year, month
 ```
 
 <LineChart
     data={occupancy_trend}
-    x=mes
-    y=avg_ocupacion
-    series=departamento
+    x=month
+    y=occupancy_rate
+    series=department
     title="Tendencia de Ocupación Hotelera Mensual"
     yFmt=pct
 />
@@ -91,18 +91,18 @@ order by anio, mes
 
 ```sql seasonality
 select
-    mes,
-    sum(total_visitantes) as total_visitantes,
-    round(avg(gasto_promedio_usd), 2) as gasto_promedio
+    month,
+    sum(total_visitors) as total_visitors,
+    round(avg(average_spending_usd), 2) as average_spending
 from tourism.fct_tourism_arrivals
-group by mes
-order by mes
+group by month
+order by month
 ```
 
 <BarChart
     data={seasonality}
-    x=mes
-    y=total_visitantes
+    x=month
+    y=total_visitors
     title="Estacionalidad — Visitantes por Mes"
 />
 

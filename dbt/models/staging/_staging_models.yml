@@ -4,23 +4,23 @@ models:
   - name: stg_tourism_arrivals
     description: "Llegadas de turistas internacionales limpiadas y estandarizadas."
     columns:
-      - name: fecha_llegada
+      - name: arrival_date
         description: "Fecha de llegada."
         tests:
           - not_null
-      - name: anio
+      - name: year
         description: "Año de la llegada."
         tests:
           - not_null
-      - name: pais_origen
+      - name: country_of_origin
         description: "País de origen del turista."
         tests:
           - not_null
-      - name: departamento_destino
+      - name: destination_department
         description: "Departamento de destino."
         tests:
           - not_null
-      - name: numero_visitantes
+      - name: number_of_visitors
         description: "Número de visitantes."
         tests:
           - not_null
@@ -31,21 +31,21 @@ models:
   - name: stg_hotel_occupancy
     description: "Ocupación hotelera limpiada y estandarizada."
     columns:
-      - name: departamento
+      - name: department
         description: "Departamento colombiano."
         tests:
           - not_null
-      - name: porcentaje_ocupacion
+      - name: occupancy_rate
         description: "Porcentaje de ocupación hotelera."
         tests:
           - not_null
           - dbt_expectations.expect_column_values_to_be_between:
               min_value: 0
               max_value: 100
-      - name: anio
+      - name: year
         tests:
           - not_null
-      - name: mes
+      - name: month
         tests:
           - not_null
           - accepted_values:
@@ -57,23 +57,157 @@ models:
       Fuente de referencia para validación cruzada: indicadores ST.INT.ARVL,
       ST.INT.DPRT y ST.INT.RCPT.CD.
     columns:
-      - name: anio
+      - name: year
         description: "Año del indicador."
         tests:
           - not_null
-      - name: indicador_codigo
+      - name: indicator_code
         description: "Código del indicador World Bank."
         tests:
           - not_null
           - accepted_values:
-              values: ["ST.INT.ARVL", "ST.INT.DPRT", "ST.INT.RCPT.CD"]
-      - name: valor
+              values:
+                - "ST.INT.ARVL"
+                - "ST.INT.DPRT"
+                - "ST.INT.RCPT.CD"
+                - "ST.INT.XPND.CD"
+                - "ST.INT.RCPT.XP.ZS"
+                - "NY.GDP.MKTP.CD"
+      - name: value
         description: "Valor del indicador."
         tests:
           - not_null
           - dbt_expectations.expect_column_values_to_be_between:
               min_value: 0
-      - name: fuente
+      - name: source
         description: "Origen del dato (world_bank o fallback)."
         tests:
           - not_null
+
+  # ------------------------------------------------------------------
+  # NUEVOS MODELOS: DANE PIB Turístico
+  # ------------------------------------------------------------------
+  - name: stg_dane_tourism_gdp
+    description: "PIB turístico de Colombia limpiado — datos del DANE."
+    columns:
+      - name: year
+        description: "Año del registro."
+        tests:
+          - not_null
+      - name: tourism_gdp_billions_cop
+        description: "PIB turístico en billones COP."
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+      - name: pct_of_total_gdp
+        description: "Porcentaje del PIB total."
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 100
+
+  # ------------------------------------------------------------------
+  # NUEVOS MODELOS: Migración Colombia
+  # ------------------------------------------------------------------
+  - name: stg_migracion_flows
+    description: "Flujos migratorios de Colombia limpiados — Migración Colombia."
+    columns:
+      - name: year
+        tests:
+          - not_null
+      - name: month
+        tests:
+          - not_null
+          - accepted_values:
+              values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+      - name: nationality
+        description: "Nacionalidad del viajero."
+        tests:
+          - not_null
+      - name: movement_type
+        description: "Tipo de movimiento (entrada/salida)."
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["entrada", "salida"]
+      - name: number_of_travelers
+        description: "Cantidad de viajeros."
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+
+  # ------------------------------------------------------------------
+  # Comparación Regional — World Bank
+  # ------------------------------------------------------------------
+  - name: stg_world_bank_regional
+    description: "Indicadores turísticos de países vecinos — World Bank."
+    columns:
+      - name: year
+        tests:
+          - not_null
+      - name: country_code
+        description: "Código ISO3 del país."
+        tests:
+          - not_null
+      - name: indicator_code
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["ST.INT.ARVL", "ST.INT.RCPT.CD"]
+      - name: value
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+
+  # ------------------------------------------------------------------
+  # Aerocivil — Pasajeros Aéreos
+  # ------------------------------------------------------------------
+  - name: stg_aerocivil_passengers
+    description: "Pasajeros aéreos mensuales por aeropuerto — Aerocivil."
+    columns:
+      - name: year
+        tests:
+          - not_null
+      - name: month
+        tests:
+          - not_null
+          - accepted_values:
+              values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+      - name: airport
+        description: "Nombre del aeropuerto."
+        tests:
+          - not_null
+      - name: total_passengers
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+
+  # ------------------------------------------------------------------
+  # Banco de la República — Balanza Turística
+  # ------------------------------------------------------------------
+  - name: stg_banrep_tourism_balance
+    description: "Balanza turística trimestral — Banco de la República."
+    columns:
+      - name: year
+        tests:
+          - not_null
+      - name: quarter
+        tests:
+          - not_null
+          - accepted_values:
+              values: [1, 2, 3, 4]
+      - name: tourism_income_usd_millions
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+      - name: tourism_expenditure_usd_millions
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0

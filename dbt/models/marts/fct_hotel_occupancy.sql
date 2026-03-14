@@ -15,29 +15,29 @@ final as (
     select
         -- Surrogate key
         {{ dbt_utils.generate_surrogate_key([
-            'anio', 'mes', 'departamento'
+            'year', 'month', 'department'
         ]) }}                                   as occupancy_id,
 
         -- Dimensiones
-        anio,
-        mes,
-        fecha_periodo,
-        departamento,
+        year,
+        month,
+        period_date,
+        department,
 
         -- Métricas
-        porcentaje_ocupacion,
-        habitaciones_disponibles,
-        habitaciones_ocupadas,
-        round(tarifa_promedio_cop, 0)           as tarifa_promedio_cop,
+        occupancy_rate,
+        available_rooms,
+        occupied_rooms,
+        round(average_rate_cop, 0)              as average_rate_cop,
 
         -- Métricas calculadas
         case
-            when habitaciones_disponibles > 0
+            when available_rooms > 0
             then round(
-                (habitaciones_ocupadas::double / habitaciones_disponibles) * 100, 1
+                (occupied_rooms::double / available_rooms) * 100, 1
             )
             else 0
-        end                                     as ocupacion_calculada,
+        end                                     as calculated_occupancy,
 
         -- Metadata
         current_timestamp                        as loaded_at

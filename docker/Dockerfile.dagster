@@ -25,7 +25,7 @@ COPY dagster/ /opt/dagster/app/
 # Copiar proyecto dbt
 COPY dbt/ /opt/dagster/dbt/
 
-# Instalar dependencias
+# Instalar dependencias del pipeline
 RUN pip install --no-cache-dir \
     dagster \
     dagster-webserver \
@@ -38,7 +38,9 @@ RUN pip install --no-cache-dir \
     pandas \
     pyarrow \
     requests \
-    openpyxl
+    openpyxl \
+    streamlit \
+    plotly
 
 # Instalar el proyecto Dagster como paquete editable
 RUN pip install --no-cache-dir -e /opt/dagster/app/

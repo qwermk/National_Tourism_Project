@@ -19,16 +19,16 @@
 
     select
         date_day,
-        extract(year from date_day)     as anio,
-        extract(month from date_day)    as mes,
-        extract(day from date_day)      as dia,
-        extract(dow from date_day)      as dia_semana,
+        extract(year from date_day)     as year,
+        extract(month from date_day)    as month,
+        extract(day from date_day)      as day,
+        extract(dow from date_day)      as day_of_week,
         case
             when extract(month from date_day) in (12, 1, 2) then 'Q1'
             when extract(month from date_day) in (3, 4, 5) then 'Q2'
             when extract(month from date_day) in (6, 7, 8) then 'Q3'
             else 'Q4'
-        end as trimestre
+        end as quarter
 
     from date_spine
 

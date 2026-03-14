@@ -181,7 +181,7 @@ class TestDagsterMaterializaEnMinIO:
         df = _read_parquet(minio_client, "bronze", "world_bank/arrivals_annual.parquet")
         assert len(df) > 0
         # Esquema mínimo esperado
-        for col in ("anio", "indicador_codigo", "valor"):
+        for col in ("year", "indicator_code", "value"):
             assert col in df.columns, f"Columna '{col}' faltante en el parquet"
 
     def test_raw_citur_arrivals_synthetic_escribe_parquet(
@@ -203,7 +203,7 @@ class TestDagsterMaterializaEnMinIO:
 
         df = _read_parquet(minio_client, "bronze", "citur/tourism_arrivals.parquet")
         assert len(df) > 100, "Se esperaban > 100 filas del dataset sintético"
-        for col in ("anio", "mes", "numero_visitantes"):
+        for col in ("year", "month", "number_of_visitors"):
             assert col in df.columns, f"Columna '{col}' faltante"
 
     def test_raw_citur_hotel_occupancy_synthetic_escribe_parquet(
@@ -225,7 +225,7 @@ class TestDagsterMaterializaEnMinIO:
 
         df = _read_parquet(minio_client, "bronze", "citur/hotel_occupancy.parquet")
         assert len(df) > 0
-        assert "porcentaje_ocupacion" in df.columns
+        assert "occupancy_rate" in df.columns
 
 
 # ===========================================================================
@@ -238,7 +238,7 @@ class TestCalidadDatosAlmacenados:
     """Verifica integridad de los parquet que Dagster dejó en MinIO."""
 
     def test_world_bank_anio_minimo(self, minio_client, minio_res, http_res):
-        """Todos los registros del World Bank deben tener anio >= 2010."""
+        """Todos los registros del World Bank deben tener year >= 2010."""
         from national_tourism.assets.ingestion.real_sources import raw_world_bank_arrivals
 
         materialize(
@@ -247,8 +247,8 @@ class TestCalidadDatosAlmacenados:
         )
         df = _read_parquet(minio_client, "bronze", "world_bank/arrivals_annual.parquet")
 
-        assert (df["anio"] >= 2010).all(), \
-            f"Registros con anio < 2010: {df[df['anio'] < 2010]}"
+        assert (df["year"] >= 2010).all(), \
+            f"Registros con year < 2010: {df[df['year'] < 2010]}"
 
     def test_world_bank_indicadores_validos(self, minio_client, minio_res, http_res):
         """Solo deben aparecer los tres indicadores configurados."""
@@ -261,7 +261,7 @@ class TestCalidadDatosAlmacenados:
         df = _read_parquet(minio_client, "bronze", "world_bank/arrivals_annual.parquet")
 
         valid = {"ST.INT.ARVL", "ST.INT.DPRT", "ST.INT.RCPT.CD"}
-        found = set(df["indicador_codigo"].unique())
+        found = set(df["indicator_code"].unique())
         assert found.issubset(valid), f"Indicadores inesperados: {found - valid}"
 
     def test_citur_arrivals_sin_nulos_en_columnas_clave(
@@ -277,14 +277,14 @@ class TestCalidadDatosAlmacenados:
         )
         df = _read_parquet(minio_client, "bronze", "citur/tourism_arrivals.parquet")
 
-        for col in ("anio", "mes", "numero_visitantes"):
+        for col in ("year", "month", "number_of_visitors"):
             nulls = df[col].isna().sum()
             assert nulls == 0, f"Columna '{col}' tiene {nulls} nulos"
 
     def test_hotel_occupancy_tasa_entre_0_y_100(
         self, minio_client, minio_res, http_res, monkeypatch
     ):
-        """porcentaje_ocupacion debe estar acotado entre 0 y 100."""
+        """occupancy_rate debe estar acotado entre 0 y 100."""
         from national_tourism.assets.ingestion.real_sources import raw_citur_hotel_occupancy
 
         monkeypatch.delenv("CITUR_OCCUPANCY_URL", raising=False)
@@ -294,10 +294,10 @@ class TestCalidadDatosAlmacenados:
         )
         df = _read_parquet(minio_client, "bronze", "citur/hotel_occupancy.parquet")
 
-        assert df["porcentaje_ocupacion"].between(0, 100).all(), \
-            "porcentaje_ocupacion fuera del rango [0, 100]"
-        assert (df["habitaciones_ocupadas"] >= 0).all(), \
-            "habitaciones_ocupadas con valores negativos"
+        assert df["occupancy_rate"].between(0, 100).all(), \
+            "occupancy_rate fuera del rango [0, 100]"
+        assert (df["occupied_rooms"] >= 0).all(), \
+            "occupied_rooms con valores negativos"
 
     def test_todos_los_parquets_tienen_datos(self, minio_client):
         """Todos los parquets escritos por las tests anteriores deben tener datos."""

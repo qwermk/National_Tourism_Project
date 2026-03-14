@@ -168,23 +168,23 @@ def _create_sample_arrivals_data() -> pd.DataFrame:
     dates = pd.date_range("2019-01-01", "2024-12-31", periods=n_records)
 
     return pd.DataFrame({
-        "fecha_llegada": dates,
-        "anio": dates.year,
-        "mes": dates.month,
-        "pais_origen": np.random.choice(countries, n_records),
-        "departamento_destino": np.random.choice(departments, n_records),
-        "motivo_viaje": np.random.choice(
+        "arrival_date": dates,
+        "year": dates.year,
+        "month": dates.month,
+        "country_of_origin": np.random.choice(countries, n_records),
+        "destination_department": np.random.choice(departments, n_records),
+        "travel_purpose": np.random.choice(
             ["Turismo", "Negocios", "Eventos", "Educación", "Salud"],
             n_records,
             p=[0.55, 0.20, 0.10, 0.08, 0.07],
         ),
-        "punto_entrada": np.random.choice(
+        "entry_point": np.random.choice(
             ["Aéreo", "Terrestre", "Marítimo"],
             n_records,
             p=[0.70, 0.22, 0.08],
         ),
-        "numero_visitantes": np.random.randint(1, 500, n_records),
-        "gasto_estimado_usd": np.round(np.random.uniform(200, 5000, n_records), 2),
+        "number_of_visitors": np.random.randint(1, 500, n_records),
+        "estimated_spending_usd": np.round(np.random.uniform(200, 5000, n_records), 2),
     })
 
 
@@ -218,19 +218,19 @@ def _create_sample_occupancy_data() -> pd.DataFrame:
                 occupancy = min(95, max(10, base_occupancy + np.random.normal(0, 8)))
 
                 records.append({
-                    "anio": year,
-                    "mes": month,
-                    "departamento": dept,
-                    "porcentaje_ocupacion": round(occupancy, 1),
-                    "habitaciones_disponibles": np.random.randint(500, 5000),
-                    "habitaciones_ocupadas": None,  # Se calculará en staging
-                    "tarifa_promedio_cop": round(np.random.uniform(80000, 500000), 0),
+                    "year": year,
+                    "month": month,
+                    "department": dept,
+                    "occupancy_rate": round(occupancy, 1),
+                    "available_rooms": np.random.randint(500, 5000),
+                    "occupied_rooms": None,  # Se calculará en staging
+                    "average_rate_cop": round(np.random.uniform(80000, 500000), 0),
                 })
 
     df = pd.DataFrame(records)
     # Calcular habitaciones ocupadas
-    df["habitaciones_ocupadas"] = (
-        df["habitaciones_disponibles"] * df["porcentaje_ocupacion"] / 100
+    df["occupied_rooms"] = (
+        df["available_rooms"] * df["occupancy_rate"] / 100
     ).astype(int)
 
     return df

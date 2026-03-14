@@ -13,23 +13,23 @@ with arrivals as (
 monthly_agg as (
 
     select
-        anio,
-        mes,
-        pais_origen,
-        departamento_destino,
-        motivo_viaje,
-        punto_entrada,
+        year,
+        month,
+        country_of_origin,
+        destination_department,
+        travel_purpose,
+        entry_point,
 
         -- Métricas agregadas
-        sum(numero_visitantes)          as total_visitantes,
-        sum(gasto_estimado_usd)         as gasto_total_usd,
-        avg(gasto_estimado_usd)         as gasto_promedio_usd,
-        count(*)                        as num_registros
+        sum(number_of_visitors)          as total_visitors,
+        sum(estimated_spending_usd)      as total_spending_usd,
+        avg(estimated_spending_usd)      as average_spending_usd,
+        count(*)                         as num_records
 
     from arrivals
     group by
-        anio, mes, pais_origen, departamento_destino,
-        motivo_viaje, punto_entrada
+        year, month, country_of_origin, destination_department,
+        travel_purpose, entry_point
 
 )
 

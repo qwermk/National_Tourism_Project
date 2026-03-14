@@ -3,15 +3,14 @@ title: Análisis por Departamento
 description: Detalle de turismo y ocupación por departamento colombiano
 ---
 
-# Análisis por Departamento
 
 ```sql departments
-select distinct departamento_destino as departamento
+select distinct destination_department as department
 from tourism.fct_tourism_arrivals
-order by departamento
+order by department
 ```
 
-<Dropdown name=selected_dept data={departments} value=departamento title="Selecciona un departamento" />
+<Dropdown name=selected_dept data={departments} value=department title="Selecciona un departamento" />
 
 ---
 
@@ -19,21 +18,21 @@ order by departamento
 
 ```sql dept_arrivals
 select
-    anio,
-    mes,
-    sum(total_visitantes) as total_visitantes,
-    round(sum(gasto_total_usd), 0) as gasto_total_usd
+    year,
+    month,
+    sum(total_visitors) as total_visitors,
+    round(sum(total_spending_usd), 0) as total_spending_usd
 from tourism.fct_tourism_arrivals
-where departamento_destino = '${inputs.selected_dept}'
-group by anio, mes
-order by anio, mes
+where destination_department = '${inputs.selected_dept}'
+group by year, month
+order by year, month
 ```
 
 <LineChart
     data={dept_arrivals}
-    x=mes
-    y=total_visitantes
-    series=anio
+    x=month
+    y=total_visitors
+    series=year
     title="Visitantes por Mes en {inputs.selected_dept}"
 />
 
@@ -43,20 +42,20 @@ order by anio, mes
 
 ```sql dept_occupancy
 select
-    anio,
-    mes,
-    avg_ocupacion,
-    tarifa_promedio_cop
+    year,
+    month,
+    occupancy_rate,
+    average_rate_cop
 from tourism.fct_hotel_occupancy
-where departamento = '${inputs.selected_dept}'
-order by anio, mes
+where department = '${inputs.selected_dept}'
+order by year, month
 ```
 
 <LineChart
     data={dept_occupancy}
-    x=mes
-    y=avg_ocupacion
-    series=anio
+    x=month
+    y=occupancy_rate
+    series=year
     title="Ocupación Hotelera (%) en {inputs.selected_dept}"
     yFmt=pct
 />

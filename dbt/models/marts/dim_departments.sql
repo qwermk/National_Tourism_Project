@@ -14,8 +14,8 @@ with departments as (
 final as (
 
     select
-        codigo_dane,
-        departamento,
+        dane_code,
+        department,
         capital,
         region,
         current_timestamp as loaded_at

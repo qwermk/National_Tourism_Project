@@ -18,23 +18,23 @@ sources:
         meta:
           external_location: "read_parquet('s3://bronze/tourism_arrivals/arrivals.parquet')"
         columns:
-          - name: fecha_llegada
+          - name: arrival_date
             description: "Fecha de llegada del turista."
-          - name: anio
+          - name: year
             description: "Año de la llegada."
-          - name: mes
+          - name: month
             description: "Mes de la llegada."
-          - name: pais_origen
+          - name: country_of_origin
             description: "País de origen del turista."
-          - name: departamento_destino
+          - name: destination_department
             description: "Departamento colombiano de destino."
-          - name: motivo_viaje
+          - name: travel_purpose
             description: "Motivo del viaje (Turismo, Negocios, etc.)."
-          - name: punto_entrada
+          - name: entry_point
             description: "Punto de entrada (Aéreo, Terrestre, Marítimo)."
-          - name: numero_visitantes
+          - name: number_of_visitors
             description: "Número de visitantes en el registro."
-          - name: gasto_estimado_usd
+          - name: estimated_spending_usd
             description: "Gasto estimado en dólares."
 
       - name: hotel_occupancy
@@ -42,19 +42,19 @@ sources:
         meta:
           external_location: "read_parquet('s3://bronze/hotel_occupancy/occupancy.parquet')"
         columns:
-          - name: anio
+          - name: year
             description: "Año del registro."
-          - name: mes
+          - name: month
             description: "Mes del registro."
-          - name: departamento
+          - name: department
             description: "Departamento colombiano."
-          - name: porcentaje_ocupacion
+          - name: occupancy_rate
             description: "Porcentaje de ocupación hotelera."
-          - name: habitaciones_disponibles
+          - name: available_rooms
             description: "Total de habitaciones disponibles."
-          - name: habitaciones_ocupadas
+          - name: occupied_rooms
             description: "Total de habitaciones ocupadas."
-          - name: tarifa_promedio_cop
+          - name: average_rate_cop
             description: "Tarifa promedio en pesos colombianos."
 
       # ------------------------------------------------------------------
@@ -65,23 +65,23 @@ sources:
         meta:
           external_location: "read_parquet('s3://bronze/citur/tourism_arrivals.parquet')"
         columns:
-          - name: fecha_llegada
+          - name: arrival_date
             description: "Fecha de llegada."
-          - name: anio
+          - name: year
             description: "Año de la llegada."
-          - name: mes
+          - name: month
             description: "Mes de la llegada."
-          - name: pais_origen
+          - name: country_of_origin
             description: "País de origen del turista."
-          - name: departamento_destino
+          - name: destination_department
             description: "Departamento colombiano de destino."
-          - name: motivo_viaje
+          - name: travel_purpose
             description: "Motivo del viaje."
-          - name: punto_entrada
+          - name: entry_point
             description: "Punto de entrada (Aéreo, Terrestre, Marítimo)."
-          - name: numero_visitantes
+          - name: number_of_visitors
             description: "Número de visitantes."
-          - name: gasto_estimado_usd
+          - name: estimated_spending_usd
             description: "Gasto estimado en USD."
 
       - name: citur_hotel_occupancy
@@ -89,19 +89,19 @@ sources:
         meta:
           external_location: "read_parquet('s3://bronze/citur/hotel_occupancy.parquet')"
         columns:
-          - name: anio
+          - name: year
             description: "Año del registro."
-          - name: mes
+          - name: month
             description: "Mes del registro."
-          - name: departamento
+          - name: department
             description: "Departamento colombiano."
-          - name: porcentaje_ocupacion
+          - name: occupancy_rate
             description: "Porcentaje de ocupación hotelera."
-          - name: habitaciones_disponibles
+          - name: available_rooms
             description: "Total de habitaciones disponibles."
-          - name: habitaciones_ocupadas
+          - name: occupied_rooms
             description: "Total de habitaciones ocupadas."
-          - name: tarifa_promedio_cop
+          - name: average_rate_cop
             description: "Tarifa promedio en pesos colombianos."
 
   # ------------------------------------------------------------------------
@@ -117,15 +117,143 @@ sources:
         meta:
           external_location: "read_parquet('s3://bronze/world_bank/arrivals_annual.parquet')"
         columns:
-          - name: anio
+          - name: year
             description: "Año del indicador."
-          - name: indicador_codigo
+          - name: indicator_code
             description: "Código del indicador World Bank (ej. ST.INT.ARVL)."
-          - name: indicador_nombre
+          - name: indicator_name
             description: "Nombre descriptivo del indicador."
-          - name: valor
+          - name: value
             description: "Valor numérico del indicador."
-          - name: pais_codigo
+          - name: country_code
             description: "Código ISO3 del país (COL)."
-          - name: fuente
+          - name: source
             description: "Fuente del dato (world_bank | fallback)."
+
+      - name: regional_comparison
+        description: "Indicadores de turismo para países vecinos — comparación regional."
+        meta:
+          external_location: "read_parquet('s3://bronze/world_bank/regional_comparison.parquet')"
+        columns:
+          - name: year
+            description: "Año del indicador."
+          - name: country_code
+            description: "Código ISO3 del país."
+          - name: country_name
+            description: "Nombre del país."
+          - name: indicator_code
+            description: "Código del indicador World Bank."
+          - name: indicator_name
+            description: "Nombre descriptivo del indicador."
+          - name: value
+            description: "Valor numérico del indicador."
+          - name: source
+            description: "Fuente del dato."
+
+  # ------------------------------------------------------------------------
+  # DANE — PIB Turístico de Colombia (NUEVA FUENTE)
+  # ------------------------------------------------------------------------
+  - name: dane
+    description: "Indicadores económicos del turismo colombiano — DANE."
+    meta:
+      layer: bronze
+    tables:
+      - name: tourism_gdp
+        description: "Contribución del turismo al PIB de Colombia (datos anuales)."
+        meta:
+          external_location: "read_parquet('s3://bronze/dane/tourism_gdp.parquet')"
+        columns:
+          - name: year
+            description: "Año del registro."
+          - name: tourism_gdp_billions_cop
+            description: "PIB turístico en billones de pesos colombianos."
+          - name: pct_of_total_gdp
+            description: "Porcentaje del PIB total que representa el turismo."
+          - name: tourism_employment_thousands
+            description: "Miles de empleos generados por el sector turismo."
+          - name: annual_variation_pct
+            description: "Variación porcentual respecto al año anterior."
+          - name: source
+            description: "Fuente del dato (dane | synthetic)."
+
+  # ------------------------------------------------------------------------
+  # Migración Colombia — Flujos Migratorios (NUEVA FUENTE)
+  # ------------------------------------------------------------------------
+  - name: migracion
+    description: "Flujos migratorios de entrada/salida de viajeros — Migración Colombia."
+    meta:
+      layer: bronze
+    tables:
+      - name: flows
+        description: "Registro de entradas y salidas de viajeros por nacionalidad y punto de control."
+        meta:
+          external_location: "read_parquet('s3://bronze/migracion/flows.parquet')"
+        columns:
+          - name: year
+            description: "Año del registro."
+          - name: month
+            description: "Mes del registro."
+          - name: nationality
+            description: "Nacionalidad del viajero."
+          - name: movement_type
+            description: "Tipo de movimiento: entrada o salida."
+          - name: control_point
+            description: "Punto de control migratorio (aeropuerto, frontera)."
+          - name: number_of_travelers
+            description: "Cantidad de viajeros registrados."
+          - name: source
+            description: "Fuente del dato."
+
+  # ------------------------------------------------------------------------
+  # Aerocivil — Pasajeros Aéreos de Colombia
+  # ------------------------------------------------------------------------
+  - name: aerocivil
+    description: "Estadísticas de pasajeros aéreos — Aeronáutica Civil de Colombia."
+    meta:
+      layer: bronze
+    tables:
+      - name: passengers
+        description: "Pasajeros aéreos mensuales por aeropuerto."
+        meta:
+          external_location: "read_parquet('s3://bronze/aerocivil/passengers.parquet')"
+        columns:
+          - name: year
+            description: "Año del registro."
+          - name: month
+            description: "Mes del registro."
+          - name: airport
+            description: "Nombre del aeropuerto."
+          - name: airport_city
+            description: "Ciudad del aeropuerto."
+          - name: domestic_passengers
+            description: "Pasajeros en vuelos nacionales."
+          - name: international_passengers
+            description: "Pasajeros en vuelos internacionales."
+          - name: total_passengers
+            description: "Total de pasajeros."
+
+  # ------------------------------------------------------------------------
+  # Banco de la República — Balanza Turística
+  # ------------------------------------------------------------------------
+  - name: banrep
+    description: "Balanza de pagos turística — Banco de la República de Colombia."
+    meta:
+      layer: bronze
+    tables:
+      - name: tourism_balance
+        description: "Ingresos y egresos por turismo (USD millones), trimestral."
+        meta:
+          external_location: "read_parquet('s3://bronze/banrep/tourism_balance.parquet')"
+        columns:
+          - name: year
+            description: "Año del registro."
+          - name: quarter
+            description: "Trimestre (1-4)."
+          - name: tourism_income_usd_millions
+            description: "Ingresos por turismo receptor (USD millones)."
+          - name: tourism_expenditure_usd_millions
+            description: "Egresos por turismo emisor (USD millones)."
+          - name: tourism_balance_usd_millions
+            description: "Balance neto (ingresos - egresos)."
+          - name: source
+            description: "Fuente del dato."

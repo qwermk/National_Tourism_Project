@@ -38,17 +38,25 @@ flowchart LR
         subgraph Bronze["🥉 Bronze — Raw Ingestion"]
             RAW_ARR["raw_tourism_arrivals"]
             RAW_OCC["raw_hotel_occupancy"]
+            RAW_WB["raw_world_bank_arrivals"]
+            RAW_DANE["raw_dane_tourism_gdp"]
+            RAW_MIG["raw_migracion_flows"]
         end
 
         subgraph Silver["🥈 Silver — Staging & Cleaning"]
             STG_ARR["stg_tourism_arrivals"]
             STG_OCC["stg_hotel_occupancy"]
+            STG_DANE["stg_dane_tourism_gdp"]
+            STG_MIG["stg_migracion_flows"]
         end
 
         subgraph Gold["🥇 Gold — Business Models"]
             FCT_ARR["fct_tourism_arrivals"]
             FCT_OCC["fct_hotel_occupancy"]
+            FCT_GDP["fct_tourism_gdp"]
+            FCT_MIG["fct_migration_flows"]
             DIM_DEP["dim_departments"]
+            DIM_DATE["dim_date"]
         end
     end
 
@@ -59,7 +67,7 @@ flowchart LR
     end
 
     subgraph Visualization["📊 Dashboards"]
-        EVIDENCE["Evidence.dev"]
+        STREAMLIT["Streamlit + Plotly"]
     end
 
     Sources -->|CSV / API| Bronze
@@ -69,7 +77,7 @@ flowchart LR
     Gold -->|Write| DUCKDB
     Gold -->|Parquet| MINIO
     DBT -->|Transform| DUCKDB
-    DUCKDB -->|Query| EVIDENCE
+    DUCKDB -->|Query| STREAMLIT
 ```
 
 #### Data Flow Detail
@@ -95,7 +103,7 @@ flowchart TD
     end
 
     subgraph Serving["Analytics"]
-        I -->|SQL queries| J["Evidence.dev Dashboards"]
+        I -->|SQL queries| J["Streamlit Dashboards"]
     end
 
     SENSOR["🔔 MinIO Sensor\n(detects new files)"] -.->|Triggers| Ingestion
@@ -115,7 +123,7 @@ flowchart TD
 | Storage | MinIO | S3-compatible object store (Bronze/Silver/Gold) | AGPL v3 |
 | Processing | DuckDB | In-process OLAP engine | MIT |
 | Transforms | dbt-core | SQL-based data modeling (Medallion layers) | Apache 2.0 |
-| Visualization | Evidence.dev | Code-driven BI dashboards | MIT |
+| Visualization | Streamlit + Plotly | Interactive Python-based dashboards | Apache 2.0 |
 | Infrastructure | Docker Compose | Container orchestration | Apache 2.0 |
 
 > ⚠️ **Note:** This project uses **Dagster OSS** (the open-source core, Apache 2.0 license), **not** Dagster Cloud (the paid commercial product). Everything runs without any paid services.
@@ -128,7 +136,7 @@ flowchart LR
     Dagster -->|Load| SF[("❄️ Snowflake")]
     SF -->|Transform| DBT["dbt\n(Snowflake target)"]
     DBT --> SF
-    SF -->|Query| Evidence["📊 Evidence.dev"]
+    SF -->|Query| Streamlit["📊 Streamlit"]
 ```
 
 - Migrate storage and processing to Snowflake
@@ -144,7 +152,7 @@ flowchart LR
     S3 -->|Query| Athena["Athena / Redshift"]
     Athena -->|Transform| DBT["dbt"]
     DBT --> Athena
-    Athena -->|Query| Evidence["📊 Evidence.dev"]
+    Athena -->|Query| Streamlit["📊 Streamlit"]
 ```
 
 - S3 + Redshift / Athena
@@ -163,9 +171,9 @@ National_Tourism_Project/
 │       ├── __init__.py
 │       ├── definitions.py           # Dagster entry point
 │       ├── assets/                  # Software-Defined Assets
-│       │   ├── ingestion/           # Bronze: source extraction
-│       │   ├── staging/             # Silver: cleaning & standardization
-│       │   └── marts/               # Gold: business models
+│       │   ├── ingestion/           # Bronze: 7 ingestion assets
+│       │   ├── staging/             # (Legacy — replaced by dbt SQL)
+│       │   └── marts/               # (Legacy — replaced by dbt SQL)
 │       ├── resources/               # Connections (MinIO, DuckDB)
 │       ├── sensors/                 # Automatic triggers
 │       └── schedules/               # Execution scheduling
@@ -187,11 +195,13 @@ National_Tourism_Project/
 │   ├── local/                       # Local version (DuckDB + MinIO)
 │   ├── snowflake/                   # Snowflake version
 │   └── aws/                         # AWS version
-├── dashboards/                      # Evidence.dev
+├── dashboards/                      # Streamlit (app.py + requirements.txt)
 ├── data/                            # Sample raw data
 │   ├── raw/                         # Downloaded files
 │   └── seeds/                       # Catalogs & dimensions
 ├── scripts/                         # Helper scripts
+├── docs/
+│   └── GUIA_SETUP.md                    # Step-by-step setup guide (Spanish)
 ├── .github/
 │   └── workflows/                   # CI/CD
 │       └── ci.yml
@@ -220,7 +230,7 @@ National_Tourism_Project/
 git clone https://github.com/tu-usuario/National_Tourism_Project.git
 cd National_Tourism_Project
 
-# 2. Start services (MinIO, Dagster, Evidence)
+# 2. Start services (MinIO, Dagster, Streamlit)
 docker compose -f docker/docker-compose.yml up -d
 
 # 3. Install Python dependencies
@@ -235,8 +245,8 @@ cd dbt && dbt deps && cd ..
 # 6. Open MinIO Console
 # → http://localhost:9001 (user: minioadmin / password: minioadmin)
 
-# 7. Open Evidence.dev dashboards
-# → http://localhost:3333
+# 7. Open Streamlit dashboards
+# → http://localhost:8501
 ```
 
 ## 📈 Key Metrics
@@ -264,12 +274,18 @@ cd dbt && dbt deps && cd ..
 | [MinIO](https://github.com/minio/minio) | S3 Storage | AGPL v3 | ✅ Yes |
 | [DuckDB](https://github.com/duckdb/duckdb) | OLAP Engine | MIT | ✅ Yes |
 | [dbt-core](https://github.com/dbt-labs/dbt-core) | SQL Transformations | Apache 2.0 | ✅ Yes |
-| [Evidence.dev](https://github.com/evidence-dev/evidence) | Dashboards | MIT | ✅ Yes |
+| [Streamlit](https://github.com/streamlit/streamlit) | Interactive Dashboards | Apache 2.0 | ✅ Yes |
+| [Plotly](https://github.com/plotly/plotly.py) | Interactive Charts | MIT | ✅ Yes |
 | [Docker](https://www.docker.com/) | Containers | Apache 2.0 | ✅ Yes |
 
 > **Dagster OSS vs Dagster Cloud:** This project uses Dagster's open-source core,
 > installed via `pip install dagster`. Dagster Cloud is a paid managed service
 > that is **not** needed or used here.
+
+## 📨 Additional Documentation
+
+- [📘 Step-by-Step Setup Guide](docs/GUIA_SETUP.md) — Detailed setup instructions for beginners (Spanish)
+- [🇪🇸 Versión en Español](README.es.md) — This README in Spanish
 
 ## 🤝 Contributing
 

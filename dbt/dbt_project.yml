@@ -26,7 +26,7 @@ clean-targets:
 # Variables del proyecto
 vars:
   start_date: "2019-01-01"
-  end_date: "2024-12-31"
+  end_date: "2026-12-31"
 
 # Materialización por defecto según la capa
 models:

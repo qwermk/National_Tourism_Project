@@ -15,17 +15,17 @@ with source as (
 cleaned as (
 
     select
-        cast(anio                as integer)  as anio,
-        trim(indicador_codigo)               as indicador_codigo,
-        trim(indicador_nombre)               as indicador_nombre,
-        coalesce(cast(valor as double), 0.0) as valor,
-        trim(pais_codigo)                    as pais_codigo,
-        coalesce(trim(fuente), 'world_bank') as fuente
+        cast(year                as integer)  as year,
+        trim(indicator_code)                 as indicator_code,
+        trim(indicator_name)                 as indicator_name,
+        coalesce(cast(value as double), 0.0) as value,
+        trim(country_code)                   as country_code,
+        coalesce(trim(source), 'world_bank') as source
 
     from source
     where
-        anio >= 2010
-        and valor > 0
+        year >= 2010
+        and value > 0
 
 )
 

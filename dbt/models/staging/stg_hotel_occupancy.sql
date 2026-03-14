@@ -12,27 +12,27 @@ cleaned as (
 
     select
         -- Periodo
-        cast(anio as integer)                   as anio,
-        cast(mes as integer)                    as mes,
-        make_date(anio, mes, 1)                 as fecha_periodo,
+        cast(year as integer)                   as year,
+        cast(month as integer)                  as month,
+        make_date(year, month, 1)               as period_date,
 
         -- Dimensiones
-        trim({{ initcap('departamento') }})             as departamento,
+        trim({{ initcap('department') }})               as department,
 
         -- Métricas (validadas)
-        least(greatest(cast(porcentaje_ocupacion as double), 0), 100)
-                                                as porcentaje_ocupacion,
-        coalesce(cast(habitaciones_disponibles as integer), 0)
-                                                as habitaciones_disponibles,
-        coalesce(cast(habitaciones_ocupadas as integer), 0)
-                                                as habitaciones_ocupadas,
-        coalesce(cast(tarifa_promedio_cop as double), 0)
-                                                as tarifa_promedio_cop
+        least(greatest(cast(occupancy_rate as double), 0), 100)
+                                                as occupancy_rate,
+        coalesce(cast(available_rooms as integer), 0)
+                                                as available_rooms,
+        coalesce(cast(occupied_rooms as integer), 0)
+                                                as occupied_rooms,
+        coalesce(cast(average_rate_cop as double), 0)
+                                                as average_rate_cop
 
     from source
     where
-        anio >= 2015
-        and mes between 1 and 12
+        year >= 2015
+        and month between 1 and 12
 
 )
 

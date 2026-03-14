@@ -8,5 +8,5 @@
 select *
 from {{ ref('fct_hotel_occupancy') }}
 where
-    abs(porcentaje_ocupacion - ocupacion_calculada) > 10
-    and habitaciones_disponibles > 0
+    abs(occupancy_rate - calculated_occupancy) > 10
+    and available_rooms > 0

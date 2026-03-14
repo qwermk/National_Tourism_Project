@@ -337,7 +337,7 @@ class TestRawCiturArrivals:
         assert call_kwargs["object_name"] == "citur/tourism_arrivals.parquet"
 
     def test_column_normalization_tolerates_variant_names(self, monkeypatch):
-        """Columna 'pais' debe renombrarse a 'pais_origen'."""
+        """Columna 'pais' debe renombrarse a 'country_of_origin'."""
         from national_tourism.assets.ingestion.real_sources import raw_citur_arrivals
 
         monkeypatch.setenv("CITUR_ARRIVALS_URL", "https://datos.gov.co/fake.csv")
@@ -355,9 +355,9 @@ class TestRawCiturArrivals:
             result = _call_asset(raw_citur_arrivals, ctx, minio=minio, http=http)
 
         uploaded_df = minio.upload_dataframe_as_parquet.call_args[1]["df"]
-        assert "pais_origen" in uploaded_df.columns
-        assert "numero_visitantes" in uploaded_df.columns
-        assert "anio" in uploaded_df.columns
+        assert "country_of_origin" in uploaded_df.columns
+        assert "number_of_visitors" in uploaded_df.columns
+        assert "year" in uploaded_df.columns
 
 
 # ---------------------------------------------------------------------------
@@ -378,8 +378,8 @@ class TestRawCiturHotelOccupancy:
 
         assert result.metadata["fuente_utilizada"].value == "synthetic"
         df = minio.upload_dataframe_as_parquet.call_args[1]["df"]
-        assert "porcentaje_ocupacion" in df.columns
-        assert df["porcentaje_ocupacion"].between(0, 100).all()
+        assert "occupancy_rate" in df.columns
+        assert df["occupancy_rate"].between(0, 100).all()
 
     def test_calculates_habitaciones_ocupadas_from_rate(self, monkeypatch):
         from national_tourism.assets.ingestion.real_sources import raw_citur_hotel_occupancy
@@ -399,7 +399,7 @@ class TestRawCiturHotelOccupancy:
             _call_asset(raw_citur_hotel_occupancy, ctx, minio=minio, http=http)
 
         df = minio.upload_dataframe_as_parquet.call_args[1]["df"]
-        assert df["habitaciones_ocupadas"].iloc[0] == 600  # 60% of 1000
+        assert df["occupied_rooms"].iloc[0] == 600  # 60% of 1000
 
     def test_uploads_to_correct_minio_path(self, monkeypatch):
         from national_tourism.assets.ingestion.real_sources import raw_citur_hotel_occupancy
@@ -433,8 +433,8 @@ class TestRawCiturHotelOccupancy:
             _call_asset(raw_citur_hotel_occupancy, ctx, minio=minio, http=http)
 
         df = minio.upload_dataframe_as_parquet.call_args[1]["df"]
-        assert df["porcentaje_ocupacion"].max() <= 100
-        assert df["porcentaje_ocupacion"].min() >= 0
+        assert df["occupancy_rate"].max() <= 100
+        assert df["occupancy_rate"].min() >= 0
 
 
 # ---------------------------------------------------------------------------

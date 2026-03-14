@@ -4,7 +4,7 @@
 -- Uso en YAML:
 --   tests:
 --     - assert_positive_values:
---         column_name: total_visitantes
+--         column_name: total_visitors
 -- =============================================================================
 
 {% test assert_positive_values(model, column_name) %}

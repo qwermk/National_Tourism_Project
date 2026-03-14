@@ -19,17 +19,17 @@ final as (
         date_day,
 
         -- Atributos básicos
-        cast(anio as integer)                                           as anio,
-        cast(mes as integer)                                            as mes,
-        cast(dia as integer)                                            as dia,
-        cast(dia_semana as integer)                                     as dia_semana,
-        trimestre,
+        cast(year as integer)                                           as year,
+        cast(month as integer)                                          as month,
+        cast(day as integer)                                            as day,
+        cast(day_of_week as integer)                                    as day_of_week,
+        quarter,
 
         -- Período mensual (para JOIN con fct_tourism_arrivals)
-        make_date(cast(anio as integer), cast(mes as integer), 1)       as fecha_periodo,
+        make_date(cast(year as integer), cast(month as integer), 1)     as period_date,
 
         -- Nombres legibles
-        case cast(dia_semana as integer)
+        case cast(day_of_week as integer)
             when 0 then 'Domingo'
             when 1 then 'Lunes'
             when 2 then 'Martes'
@@ -37,9 +37,9 @@ final as (
             when 4 then 'Jueves'
             when 5 then 'Viernes'
             when 6 then 'Sábado'
-        end                                                             as nombre_dia,
+        end                                                             as day_name,
 
-        case cast(mes as integer)
+        case cast(month as integer)
             when 1  then 'Enero'
             when 2  then 'Febrero'
             when 3  then 'Marzo'
@@ -52,13 +52,13 @@ final as (
             when 10 then 'Octubre'
             when 11 then 'Noviembre'
             when 12 then 'Diciembre'
-        end                                                             as nombre_mes,
+        end                                                             as month_name,
 
         -- Indicadores
         case
-            when cast(dia_semana as integer) in (0, 6) then true
+            when cast(day_of_week as integer) in (0, 6) then true
             else false
-        end                                                             as es_fin_de_semana,
+        end                                                             as is_weekend,
 
         current_timestamp                                               as loaded_at
 

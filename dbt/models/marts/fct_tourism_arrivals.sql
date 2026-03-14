@@ -16,24 +16,24 @@ final as (
     select
         -- Surrogate key
         {{ dbt_utils.generate_surrogate_key([
-            'anio', 'mes', 'pais_origen',
-            'departamento_destino', 'motivo_viaje', 'punto_entrada'
+            'year', 'month', 'country_of_origin',
+            'destination_department', 'travel_purpose', 'entry_point'
         ]) }}                                   as arrival_id,
 
         -- Dimensiones
-        anio,
-        mes,
-        make_date(anio, mes, 1)                 as fecha_periodo,
-        pais_origen,
-        departamento_destino,
-        motivo_viaje,
-        punto_entrada,
+        year,
+        month,
+        make_date(year, month, 1)               as period_date,
+        country_of_origin,
+        destination_department,
+        travel_purpose,
+        entry_point,
 
         -- Métricas
-        total_visitantes,
-        round(gasto_total_usd, 2)               as gasto_total_usd,
-        round(gasto_promedio_usd, 2)             as gasto_promedio_usd,
-        num_registros,
+        total_visitors,
+        round(total_spending_usd, 2)             as total_spending_usd,
+        round(average_spending_usd, 2)           as average_spending_usd,
+        num_records,
 
         -- Metadata
         current_timestamp                        as loaded_at
