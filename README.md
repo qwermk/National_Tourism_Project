@@ -1,4 +1,4 @@
-# 🇨🇴 National Tourism Project — Colombia
+#National Tourism Project — Colombia
 
 **🌐 [Leer en Español](README.es.md)**
 
